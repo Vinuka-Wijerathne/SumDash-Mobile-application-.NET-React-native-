@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackendAPI", "BackendAPI\BackendAPI.csproj", "{F76186F8-837A-403C-8F5C-27C132B57A36}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{958D0C1B-1BF9-425A-89CF-810804237BF4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "node_modules", "node_modules", "{FE8E4251-F507-4704-A9C8-3FF7BF683031}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lottie-react-native", "lottie-react-native", "{61ABF1B4-EA18-4772-AF19-AEC71EB5E54D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "windows", "windows", "{A8368F1B-D806-474C-A9EE-89628A69E881}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LottieReactNativeWindows", "Frontend\node_modules\lottie-react-native\windows\LottieReactNativeWindows\LottieReactNativeWindows.csproj", "{27F9D5E2-9457-4AE0-AADA-758E68F5BCA2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F76186F8-837A-403C-8F5C-27C132B57A36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F76186F8-837A-403C-8F5C-27C132B57A36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F76186F8-837A-403C-8F5C-27C132B57A36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F76186F8-837A-403C-8F5C-27C132B57A36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27F9D5E2-9457-4AE0-AADA-758E68F5BCA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27F9D5E2-9457-4AE0-AADA-758E68F5BCA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27F9D5E2-9457-4AE0-AADA-758E68F5BCA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27F9D5E2-9457-4AE0-AADA-758E68F5BCA2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FE8E4251-F507-4704-A9C8-3FF7BF683031} = {958D0C1B-1BF9-425A-89CF-810804237BF4}
+		{61ABF1B4-EA18-4772-AF19-AEC71EB5E54D} = {FE8E4251-F507-4704-A9C8-3FF7BF683031}
+		{A8368F1B-D806-474C-A9EE-89628A69E881} = {61ABF1B4-EA18-4772-AF19-AEC71EB5E54D}
+		{27F9D5E2-9457-4AE0-AADA-758E68F5BCA2} = {A8368F1B-D806-474C-A9EE-89628A69E881}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C21EF60D-BC08-425B-84CB-6ED0A9987D31}
+	EndGlobalSection
+EndGlobal

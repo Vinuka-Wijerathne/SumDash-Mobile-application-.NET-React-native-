@@ -1,5 +1,6 @@
 using BackendAPI.Models;
 using MongoDB.Driver;
+using Microsoft.Extensions.Options;
 
 namespace BackendAPI.Services
 {
@@ -14,11 +15,13 @@ namespace BackendAPI.Services
             _users = mongoDatabase.GetCollection<User>("Users");
         }
 
+        // Fetch user by username
         public async Task<User> GetUserByUsername(string username)
         {
             return await _users.Find(user => user.Username == username).FirstOrDefaultAsync();
         }
 
+        // Create a new user
         public async Task CreateUser(User newUser)
         {
             await _users.InsertOneAsync(newUser);

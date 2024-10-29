@@ -1,4 +1,4 @@
-namespace BackendAPI.Configurations
+namespace BackendAPI.Models
 {
     public class MongoDBSettings
     {

@@ -1,16 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import axios from 'axios'; // Import Axios
 
 const SignUpPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (name && email && password) {
-      // Simulate a successful sign-up
-      Alert.alert('Sign Up Successful', `Welcome to Sumdash, ${name}!`);
-      // Here you would typically navigate to the main game screen
+      try {
+        try {
+          const response = await axios.post('http://localhost:5247/api/Auth/signup', {
+              Username: name,
+              Email: email,
+              PasswordHash: password,
+          });
+          // Handle success response here
+      } catch (error) {
+          console.error('Error during signup:', error.response.data);
+      }
+      
+        Alert.alert('Sign Up Successful', response.data);
+        // Navigate to the main game screen here if needed
+      } catch (error) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          Alert.alert('Sign Up Failed', error.response.data);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          Alert.alert('Sign Up Failed', 'An error occurred. Please try again later.');
+        }
+      }
     } else {
       Alert.alert('Sign Up Failed', 'Please fill all the fields.');
     }

@@ -1,8 +1,10 @@
-// Models/User.cs
-public class User
+namespace BackendAPI.Models
 {
-    public string Id { get; set; }
-    public string Username { get; set; }
-    public string Email { get; set; }
-    public string PasswordHash { get; set; } // Store hashed passwords only
+    public class User
+    {
+        public required string Id { get; set; }
+        public required string Username { get; set; }
+        public required string Email { get; set; }
+        public required string PasswordHash { get; set; } // Store hashed passwords only
+    }
 }

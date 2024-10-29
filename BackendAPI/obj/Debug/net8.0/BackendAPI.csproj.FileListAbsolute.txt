@@ -142,3 +142,11 @@ D:\SE Projects\SumDash\BackendAPI\obj\Debug\net8.0\refint\BackendAPI.dll
 D:\SE Projects\SumDash\BackendAPI\obj\Debug\net8.0\BackendAPI.pdb
 D:\SE Projects\SumDash\BackendAPI\obj\Debug\net8.0\BackendAPI.genruntimeconfig.cache
 D:\SE Projects\SumDash\BackendAPI\obj\Debug\net8.0\ref\BackendAPI.dll
+D:\SE Projects\SumDash\BackendAPI\obj\Debug\net8.0\BackendAPI.sourcelink.json
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\DnsClient.dll
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\Microsoft.Bcl.TimeProvider.dll
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\MongoDB.Bson.dll
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\MongoDB.Driver.dll
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\SharpCompress.dll
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\Snappier.dll
+D:\SE Projects\SumDash\BackendAPI\bin\Debug\net8.0\ZstdSharp.dll
