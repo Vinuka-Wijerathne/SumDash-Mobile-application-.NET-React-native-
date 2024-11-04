@@ -1,10 +1,18 @@
-namespace BackendAPI.Models
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+public class User
 {
-    public class User
-    {
-        public required string Id { get; set; }
-        public required string Username { get; set; }
-        public required string Email { get; set; }
-        public required string PasswordHash { get; set; } // Store hashed passwords only
-    }
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public ObjectId Id { get; set; }
+
+    [BsonRequired]
+    public required string Username { get; set; }
+
+    [BsonRequired]
+    public required string Email { get; set; }
+
+    [BsonRequired]
+    public required string PasswordHash { get; set; }
 }

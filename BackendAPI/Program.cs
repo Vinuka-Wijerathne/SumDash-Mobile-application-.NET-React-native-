@@ -1,22 +1,37 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using System.Text;
 using BackendAPI.Models;
-using BackendAPI.Services;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MongoDB settings
+// Add MongoDB settings and configure MongoDB client
 builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("MongoDB"));
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+builder.Services.AddScoped<IMongoDatabase>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(settings.DatabaseName);
+});
+
+// Configure JWT settings
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+if (jwtSettings == null)
+{
+    throw new Exception("JWT settings are not configured.");
+}
 
 // Add JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
-if (jwtSettings == null) throw new Exception("JWT settings are not configured.");
-
 var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -40,19 +55,20 @@ builder.Services.AddAuthentication(options =>
 // Register UserService for Dependency Injection
 builder.Services.AddScoped<UserService>();
 
-// Configure CORS to allow requests from specific frontend port (e.g., 8081)
+// Configure CORS to allow requests from specific origins
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
-        policy => policy.WithOrigins("http://localhost:8081")
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
+   options.AddPolicy("AllowAll",
+    builder => builder.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader());
+
 });
 
 // Add controllers
 builder.Services.AddControllers();
 
-// Add Swagger services
+// Configure Swagger for API documentation with JWT support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -82,10 +98,11 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Middleware pipeline configuration
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // Show detailed errors in development
-    app.UseSwagger(); // Enable middleware to serve generated Swagger as a JSON endpoint.
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
     app.UseSwaggerUI(c => 
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
@@ -93,11 +110,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseCors("AllowSpecificOrigin"); // Enable CORS with the defined policy
-
+app.UseCors("AllowSpecificOrigins"); // Use the correct policy name here
 app.UseAuthentication(); // Enable authentication
-app.UseAuthorization();
+app.UseAuthorization();  // Enable authorization
 
 app.MapControllers(); // Map controller routes
 

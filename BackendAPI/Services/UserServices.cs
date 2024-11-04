@@ -1,30 +1,27 @@
-using BackendAPI.Models;
 using MongoDB.Driver;
-using Microsoft.Extensions.Options;
+using System.Threading.Tasks;
 
-namespace BackendAPI.Services
+public class UserService
 {
-    public class UserService
+    private readonly IMongoCollection<User> _users;
+
+    public UserService(IMongoDatabase database)
     {
-        private readonly IMongoCollection<User> _users;
+        _users = database.GetCollection<User>("Users");
+    }
 
-        public UserService(IOptions<MongoDBSettings> mongoSettings)
-        {
-            var mongoClient = new MongoClient(mongoSettings.Value.ConnectionString);
-            var mongoDatabase = mongoClient.GetDatabase(mongoSettings.Value.DatabaseName);
-            _users = mongoDatabase.GetCollection<User>("Users");
-        }
+    public async Task CreateUser(User user)
+    {
+        await _users.InsertOneAsync(user);
+    }
 
-        // Fetch user by username
-        public async Task<User> GetUserByUsername(string username)
-        {
-            return await _users.Find(user => user.Username == username).FirstOrDefaultAsync();
-        }
+    public async Task<User> GetUserByUsername(string username)
+    {
+        return await _users.Find(user => user.Username == username).FirstOrDefaultAsync();
+    }
 
-        // Create a new user
-        public async Task CreateUser(User newUser)
-        {
-            await _users.InsertOneAsync(newUser);
-        }
+    public async Task<User> GetUserByEmail(string email)
+    {
+        return await _users.Find(user => user.Email == email).FirstOrDefaultAsync();
     }
 }
