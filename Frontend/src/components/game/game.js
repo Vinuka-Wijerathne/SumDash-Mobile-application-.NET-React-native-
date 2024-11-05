@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, Image } from 'react-native';
 import axios from 'axios';
 import { useTheme } from '../../../ThemeContext'; // Import your theme context
 
@@ -11,17 +11,19 @@ const GamePage = ({ route, navigation }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [animationValue] = useState(new Animated.Value(0));
 
   useEffect(() => {
     fetchQuestion();
     const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     if (timeLeft === 0) {
-      Alert.alert('Game Over', `Your score is ${score}`);
+      showFeedback(`Game Over! Your score is ${score}`, true);
       navigation.navigate('Dashboard'); // Navigate to the dashboard on game over
     }
   }, [timeLeft]);
@@ -41,11 +43,44 @@ const GamePage = ({ route, navigation }) => {
     if (parseInt(userAnswer) === solution) {
       setScore(score + 1);
       setTimeLeft(timeLimit); // Reset timer on correct answer
+      showFeedback('Correct Answer!', false); // Show feedback for correct answer
       fetchQuestion(); // Load a new question on correct answer
     } else {
-      Alert.alert('Incorrect Answer', 'Try again!');
+      showFeedback('Incorrect Answer! Try again.', true); // Show feedback for incorrect answer
     }
     setUserAnswer(''); // Clear input field after submission
+  };
+
+  const showFeedback = (message, isError) => {
+    setFeedbackMessage(message);
+    setModalVisible(true);
+    if (isError) {
+      Animated.timing(animationValue, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(() => {
+          setModalVisible(false);
+          animationValue.setValue(0); // Reset for next use
+        }, 1000);
+      });
+    } else {
+      Animated.timing(animationValue, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(() => {
+          setModalVisible(false);
+          animationValue.setValue(0); // Reset for next use
+        }, 1000);
+      });
+    }
+  };
+
+  const feedbackStyle = {
+    opacity: animationValue,
   };
 
   return (
@@ -71,6 +106,18 @@ const GamePage = ({ route, navigation }) => {
       <TouchableOpacity style={[styles.button, isDarkMode && styles.darkButton]} onPress={handleAnswerSubmit}>
         <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText]}>Submit</Text>
       </TouchableOpacity>
+
+      {/* Feedback Modal */}
+      <Modal transparent={true} animationType="fade" visible={modalVisible}>
+        <View style={[styles.modalContainer, isDarkMode && styles.darkContainer]}>
+          <Animated.View style={[styles.modalContent, feedbackStyle]}>
+            <Text style={[styles.modalText, isDarkMode && styles.darkText]}>{feedbackMessage}</Text>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text style={[styles.modalCloseButton, isDarkMode && styles.darkButtonText]}>Close</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -119,11 +166,11 @@ const styles = StyleSheet.create({
   },
   questionImage: {
     width: '100%',
-    height: 220,
+    height: 180, // Adjusted height for a better fit
     resizeMode: 'contain',
     marginBottom: 20,
     borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 2, // Thinner border
     borderColor: '#ddd',
   },
   input: {
@@ -156,6 +203,27 @@ const styles = StyleSheet.create({
   },
   darkButtonText: {
     color: '#ffff00',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    marginTop: 15,
+    color: '#6200ee',
+    fontSize: 16,
+  },
+  modalDarkContent: {
+    backgroundColor: '#444444',
   },
 });
 

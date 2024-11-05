@@ -1,52 +1,47 @@
-import React, { useState } from 'react';
+// src/components/settings/settings.js
+import React from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Importing from the new package
+import { Picker } from '@react-native-picker/picker'; // Ensure you have this installed
+import { useTheme } from '../../../ThemeContext'; // Ensure the path is correct
 
-const SettingsPage = ({ onLogout }) => {
-    const [isDarkMode, setIsDarkMode] = useState(false);
-    const [fontStyle, setFontStyle] = useState('normal');
+const SettingsPage = ({ navigation }) => {
+    const { isDarkMode, toggleTheme, fontStyle, updateFontStyle } = useTheme();
 
-    const toggleDarkMode = () => {
-        setIsDarkMode(previousState => !previousState);
+    const handleLogout = () => {
+        // Add your logout logic here, such as clearing tokens or user data
+        navigation.navigate('login'); // Redirect to login page after logout
     };
 
     return (
-        <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-            <View style={styles.settingsContainer}>
-                <Text style={[styles.settingTitle, isDarkMode && styles.darkText]}>Settings</Text>
+        <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <Text style={[styles.backButtonText, isDarkMode ? styles.darkText : styles.lightText]}>Back</Text>
+            </TouchableOpacity>
 
-                <View style={styles.settingRow}>
-                    <Text style={[styles.settingLabel, isDarkMode && styles.darkText]}>Dark Mode</Text>
-                    <Switch
-                        value={isDarkMode}
-                        onValueChange={toggleDarkMode}
-                        trackColor={{ false: "#767577", true: "#81b0ff" }}
-                        thumbColor={isDarkMode ? "#f5dd4b" : "#f4f3f4"}
-                    />
-                </View>
+            <Text style={[styles.settingTitle, isDarkMode ? styles.darkText : styles.lightText]}>Settings</Text>
 
-                <View style={styles.settingRow}>
-                    <Text style={[styles.settingLabel, isDarkMode && styles.darkText]}>Font Style</Text>
-                    <Picker
-                        selectedValue={fontStyle}
-                        style={[styles.picker, isDarkMode && styles.darkInput]}
-                        onValueChange={(itemValue) => setFontStyle(itemValue)}
-                    >
-                        <Picker.Item label="Normal" value="normal" />
-                        <Picker.Item label="Italic" value="italic" />
-                        <Picker.Item label="Bold" value="bold" />
-                        <Picker.Item label="Underline" value="underline" />
-                    </Picker>
-                </View>
-
-                <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-                    <Text style={styles.logoutText}>Logout</Text>
-                </TouchableOpacity>
+            <View style={styles.settingRow}>
+                <Text style={[styles.settingText, isDarkMode ? styles.darkText : styles.lightText]}>Dark Mode</Text>
+                <Switch value={isDarkMode} onValueChange={toggleTheme} />
             </View>
 
-            <View style={styles.footer}>
-                <Text style={[styles.footerText, isDarkMode && styles.darkText]}>© 2024 Your App</Text>
+            <View style={styles.settingRow}>
+                <Text style={[styles.settingText, isDarkMode ? styles.darkText : styles.lightText]}>Font Style</Text>
+                <Picker
+                    selectedValue={fontStyle}
+                    onValueChange={(itemValue) => updateFontStyle(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Normal" value="normal" />
+                    <Picker.Item label="Italic" value="italic" />
+                    <Picker.Item label="Bold" value="bold" />
+                    <Picker.Item label="Underline" value="underline" />
+                </Picker>
             </View>
+
+            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -55,64 +50,65 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     darkContainer: {
         backgroundColor: '#333',
     },
-    settingsContainer: {
-        flex: 1,
-        justifyContent: 'flex-start',
+    lightContainer: {
+        backgroundColor: '#fff',
     },
     settingTitle: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 30,
+        marginBottom: 20,
     },
-    settingLabel: {
-        fontSize: 18,
-        marginBottom: 10,
+    darkText: {
+        color: '#fff', // White text for dark mode
+    },
+    lightText: {
+        color: '#000', // Black text for light mode
     },
     settingRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginVertical: 10,
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+    },
+    settingText: {
+        fontSize: 18,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 40,
+        left: 20,
+    },
+    backButtonText: {
+        fontSize: 16,
+        // Color will change based on mode now
     },
     picker: {
         height: 50,
         width: 150,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-    },
-    darkInput: {
-        backgroundColor: '#555',
-        color: '#fff',
+        color: '#000', // Default color for picker text
+        // Use a separate style for dark mode if necessary
     },
     logoutButton: {
-        marginTop: 30,
-        backgroundColor: '#ff4d4d',
-        padding: 12,
-        borderRadius: 30,
-        alignItems: 'center',
-        width: 300,
-        alignSelf: 'center',
+        marginTop: 20,
+        padding: 10,
+        backgroundColor: '#FF3B30', // Change to your desired color
+        borderRadius: 5,
     },
-    logoutText: {
+    logoutButtonText: {
         color: '#fff',
-        fontSize: 18,
-    },
-    footer: {
-        paddingVertical: 10,
-        alignItems: 'center',
-    },
-    footerText: {
-        fontSize: 14,
-    },
-    darkText: {
-        color: '#fff',
+        fontSize: 16, 
+        fontWeight: 'bold',
     },
 });
 
 export default SettingsPage;
+ 
