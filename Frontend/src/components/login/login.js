@@ -3,45 +3,46 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { API_URL } from '@env';
+
 
 const LoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      setErrorMessage('Please enter both email and password');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Send login request to the backend
       const response = await axios.post('http://192.168.8.105:5000/api/Auth/login', {
-        email,  // Correct key: email
-        passwordHash: password, // Correct key: passwordHash
+        email,
+        passwordHash: password,
       });
-  
-      // Check if login is successful and token is returned
-      if (response.data && response.data.token) {
-        // Save the token in AsyncStorage
+
+      if (response.status === 200) {
+        // Store the token in AsyncStorage
         await AsyncStorage.setItem('userToken', response.data.token);
-  
-        // Clear any previous error messages
-        setMessage('');
-  
-        // Navigate to the Dashboard
+        console.log('Login successful. Token:', response.data.token);
+
         navigation.navigate('Dashboard');
-      } else {
-        // Display error message if token is not received
-        setMessage('Invalid login credentials. Please try again.');
+        // Redirect to dashboard or another page if needed
       }
     } catch (error) {
-      // Handle error
-      setMessage('Error logging in. Please check your credentials and try again.');
-      console.error('Login error:', error.response || error.message);
+      setErrorMessage('Login failed. Please check your credentials.');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {/* Lottie animation */}
       <LottieView
         source={require('../../../assets/signup.json')}
         autoPlay
@@ -52,6 +53,7 @@ const LoginPage = ({ navigation }) => {
       <Text style={styles.title}>Login to SumDash</Text>
       <Text style={styles.subtitle}>Please enter your credentials below</Text>
 
+      {/* Email input */}
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -62,6 +64,7 @@ const LoginPage = ({ navigation }) => {
         placeholderTextColor="#888"
       />
 
+      {/* Password input */}
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -71,16 +74,20 @@ const LoginPage = ({ navigation }) => {
         placeholderTextColor="#888"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      {/* Login button */}
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
       </TouchableOpacity>
 
+      {/* Error message */}
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
+      {/* Forgot password link */}
       <TouchableOpacity onPress={() => alert('Forgot password functionality here')} style={styles.linkContainer}>
         <Text style={styles.linkText}>Forgot your password?</Text>
       </TouchableOpacity>
 
+      {/* Footer with SignUp link */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Don't have an account?</Text>
         <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>

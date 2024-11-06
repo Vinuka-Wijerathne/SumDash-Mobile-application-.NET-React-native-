@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 public class User
 {
-    [BsonId] // MongoDB will automatically generate this field
+    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }  // MongoDB generates this
 
@@ -21,8 +21,14 @@ public class User
     [Required]
     public required string PasswordHash { get; set; }
 
-    public int Points { get; set; } = 0;
+    // Points system with three types of points
+    public int YellowPoints { get; set; } = 0;
+    public int SilverPoints { get; set; } = 0;
+    public int GoldPoints { get; set; } = 0;
 
-    // ProfilePictureUrl is now optional
-    public string? ProfilePictureUrl { get; set; }  // Nullable
+    // Tracks the number of successfully attempted questions
+    public int SuccessfulAttempts { get; set; } = 0;
+
+    // Profile picture URL, optional field
+    public string? ProfilePictureUrl { get; set; }
 }
