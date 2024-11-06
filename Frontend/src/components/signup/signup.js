@@ -11,12 +11,12 @@ const SignUpPage = ({ navigation }) => { // Receive navigation prop
   const handleSignUp = async () => {
     if (name && email && password) {
       try {
-        const response = await axios.post('http://192.168.8.105:5247/api/Auth/signup', {
+        const response = await axios.post('http://192.168.8.105:5000/api/Auth/signup', {
           Username: name,
           Email: email,
           PasswordHash: password,  
         });
-
+  
         Alert.alert('Sign Up Successful', response.data, [
           {
             text: 'OK',
@@ -24,17 +24,31 @@ const SignUpPage = ({ navigation }) => { // Receive navigation prop
           },
         ]);
       } catch (error) {
-        if (error.response && error.response.data) {
-          console.error('Error during signup:', error.response.data.errors);
-          Alert.alert('Sign Up Failed', error.response.data.title || 'Validation error');
+        // Log specific error details to the console for debugging
+        if (error.response) {
+          console.log('Error response:', error.response);
+          console.log('Error response data:', error.response.data);
+          console.log('Error response status:', error.response.status);
+          console.log('Error response headers:', error.response.headers);
+  
+          Alert.alert(
+            'Sign Up Failed', 
+            error.response.data.title || 'Validation error',
+            [{ text: 'OK' }]
+          );
+        } else if (error.request) {
+          console.log('Error request:', error.request);
+          Alert.alert('Sign Up Failed', 'No response received from the server. Please check your connection.');
         } else {
-          Alert.alert('Sign Up Failed', 'An unexpected error occurred.');
+          console.log('Error message:', error.message);
+          Alert.alert('Sign Up Failed', 'An unexpected error occurred. Please try again.');
         }
       }
     } else {
       Alert.alert('Sign Up Failed', 'Please fill all the fields.');
     }
   };
+  
   
   return (
     <ScrollView contentContainerStyle={styles.container}>

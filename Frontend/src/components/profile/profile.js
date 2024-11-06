@@ -28,7 +28,7 @@ const ProfilePage = () => {
           <Text style={styles.statTitle}>Sums Completed</Text>
           <Text style={styles.statValue}>1,234</Text>
         </View>
-        <View style={styles.statBoxLarge}>
+        <View style={styles.statBox}>
           <Text style={styles.statTitle}>Total Score</Text>
           <Text style={styles.statValue}>9,999</Text>
         </View>
@@ -74,21 +74,15 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     width: '90%',
+    alignItems: 'center', // Centers the stats vertically
   },
   statBox: {
     backgroundColor: '#e0e0e0',
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
-    flex: 1,
-    alignItems: 'center',
-  },
-  statBoxLarge: {
-    backgroundColor: '#b0b0b0',
-    padding: 20,
-    borderRadius: 8,
-    marginTop: 10,
-    alignItems: 'center',
+    width: '100%', // Full width of the container
+    alignItems: 'center', // Center text within each box
   },
   statTitle: {
     fontSize: 16,

@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 
 public class User
 {
-    [BsonId]
+    [BsonId] // MongoDB will automatically generate this field
     [BsonRepresentation(BsonType.ObjectId)]
-    public required string Id { get; set; }
+    public string? Id { get; set; }  // MongoDB generates this
 
     [BsonRequired]
     [Required]
@@ -23,5 +23,6 @@ public class User
 
     public int Points { get; set; } = 0;
 
-    public string ProfilePictureUrl { get; set; }
+    // ProfilePictureUrl is now optional
+    public string? ProfilePictureUrl { get; set; }  // Nullable
 }

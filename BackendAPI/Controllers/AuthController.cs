@@ -23,36 +23,36 @@ namespace BackendAPI.Controllers
         }
 
         [HttpPost("signup")]
-        public async Task<IActionResult> SignUp([FromBody] User newUser)
-        {
-            if (newUser == null)
-            {
-                return BadRequest("Invalid request body.");
-            }
+public async Task<IActionResult> SignUp([FromBody] User newUser)
+{
+    if (newUser == null)
+    {
+        return BadRequest("Invalid request body.");
+    }
 
-            // Validate user input
-            if (string.IsNullOrEmpty(newUser.Username) || 
-                string.IsNullOrEmpty(newUser.Email) || 
-                string.IsNullOrEmpty(newUser.PasswordHash))
-            {
-                return BadRequest("Username, Email, and Password are required.");
-            }
+    // Additional validation checks
+    if (string.IsNullOrEmpty(newUser.Username) || 
+        string.IsNullOrEmpty(newUser.Email) || 
+        string.IsNullOrEmpty(newUser.PasswordHash))
+    {
+        return BadRequest("Username, Email, and Password are required.");
+    }
 
-            // Check if the user already exists
-            var existingUser = await _userService.GetUserByUsername(newUser.Username);
-            if (existingUser != null)
-            {
-                return BadRequest("User already exists.");
-            }
+    // Check if the user already exists
+    var existingUser = await _userService.GetUserByUsername(newUser.Username);
+    if (existingUser != null)
+    {
+        return BadRequest("User already exists.");
+    }
 
-            // Hash password before saving to the database
-            newUser.PasswordHash = PasswordHasher.Hash(newUser.PasswordHash);
-            
-            // Create new user in MongoDB
-            await _userService.CreateUser(newUser);
+    // Hash password before saving to the database
+    newUser.PasswordHash = PasswordHasher.Hash(newUser.PasswordHash);
+    
+    // Create new user in MongoDB
+    await _userService.CreateUser(newUser);
 
-            return Ok("User created successfully.");
-        }
+    return Ok("User created successfully.");
+}
 
 [HttpPost("login")]
 public async Task<IActionResult> Login([FromBody] LoginModel loginModel)

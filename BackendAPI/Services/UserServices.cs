@@ -10,11 +10,11 @@ public class UserService
         _users = database.GetCollection<User>("Users");
     }
 
-    public async Task CreateUser(User user)
+      public async Task<User> CreateUser(User newUser)
     {
-        await _users.InsertOneAsync(user);
+        await _users.InsertOneAsync(newUser);
+        return newUser;  // MongoDB will automatically assign an ObjectId to the user
     }
-
     public async Task<User> GetUserById(string id)
     {
         return await _users.Find(user => user.Id == id).FirstOrDefaultAsync();

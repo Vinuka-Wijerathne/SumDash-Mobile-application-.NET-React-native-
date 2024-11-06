@@ -110,7 +110,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowSpecificOrigins"); // Use the correct policy name here
+app.UseCors("AllowAll"); // Use the correct policy name here
+
 app.UseAuthentication(); // Enable authentication
 app.UseAuthorization();  // Enable authorization
 
