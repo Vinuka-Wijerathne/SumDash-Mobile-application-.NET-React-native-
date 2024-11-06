@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_URL } from '@env';
 
 const LoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -9,9 +11,34 @@ const LoginPage = ({ navigation }) => {
   const [message, setMessage] = useState('');
 
   const handleLogin = async () => {
-    // Navigate to the Dashboard immediately
-    navigation.navigate('Dashboard');
+    try {
+      // Send login request to the backend
+      const response = await axios.post('http://192.168.8.105:5000/api/Auth/login', {
+        email,  // Correct key: email
+        passwordHash: password, // Correct key: passwordHash
+      });
+  
+      // Check if login is successful and token is returned
+      if (response.data && response.data.token) {
+        // Save the token in AsyncStorage
+        await AsyncStorage.setItem('userToken', response.data.token);
+  
+        // Clear any previous error messages
+        setMessage('');
+  
+        // Navigate to the Dashboard
+        navigation.navigate('Dashboard');
+      } else {
+        // Display error message if token is not received
+        setMessage('Invalid login credentials. Please try again.');
+      }
+    } catch (error) {
+      // Handle error
+      setMessage('Error logging in. Please check your credentials and try again.');
+      console.error('Login error:', error.response || error.message);
+    }
   };
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

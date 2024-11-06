@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import axios from 'axios'; // Import Axios
 import Lottie from 'lottie-react-native'; // Import Lottie
-
+import { API_URL } from '@env';
 const SignUpPage = ({ navigation }) => { // Receive navigation prop
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
