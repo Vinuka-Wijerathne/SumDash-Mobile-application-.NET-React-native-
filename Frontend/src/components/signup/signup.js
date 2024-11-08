@@ -11,7 +11,7 @@ const SignUpPage = ({ navigation }) => { // Receive navigation prop
   const handleSignUp = async () => {
     if (name && email && password) {
       try {
-        const response = await axios.post('http://192.168.8.105:5000/api/Auth/signup', {
+        const response = await axios.post('http://192.168.145.70:5000/api/Auth/signup', {
           Username: name,
           Email: email,
           PasswordHash: password,  

@@ -6,43 +6,54 @@ import Footer from '../footer/footer';
 import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
 import { useTheme } from '../../../ThemeContext';
-import axios from 'axios';  // Assuming you're using axios for API calls
+import axios from 'axios';
 
 const DashboardPage = ({ navigation }) => {
   const { isDarkMode } = useTheme();
   const [username, setUsername] = useState('');
-  const [token, setToken] = useState('');
-
-  useEffect(() => {
-    // Fetch the token from AsyncStorage
-    const fetchTokenAndUsername = async () => {
-      try {
-        const savedToken = await AsyncStorage.getItem('Token');
-        if (savedToken) {
-          setToken(savedToken);
-          // After getting the token, fetch the username associated with it
-          const response = await axios.get('http://192.168.8.105:5000/api/User', {
-            headers: {
-              Authorization: `Bearer ${savedToken}`,
-            },
-          });
-          if (response.data.Username) {
-            setUsername(response.data.Username);  // Assuming the username is returned in the response
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load token or username:', error);
-      }
-    };
-
-    fetchTokenAndUsername();
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   const levels = [
     { name: 'Beginner', timeLimit: 60 },
     { name: 'Intermediate', timeLimit: 45 },
     { name: 'Hard', timeLimit: 30 },
   ];
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          console.log('Token not found');
+          setLoading(false);
+          return;
+        }
+
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          console.log('User ID not found');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch user data with token and userId
+        const response = await axios.get(`http://192.168.145.70:5000/api/User/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Adjusted to match response format
+        setUsername(response.data.username);  // Or response.data.user.username if the `user` is nested one level down
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+}, []);
+
+ 
 
   const handleLevelSelect = (level) => {
     navigation.navigate('Game', { timeLimit: level.timeLimit });
@@ -56,14 +67,14 @@ const DashboardPage = ({ navigation }) => {
         style={styles.contentContainer}
       >
         <Text style={[styles.welcomeText, isDarkMode && styles.darkWelcomeText]}>
-          Hi {username ? username : 'Loading...'}, Welcome to SumDash!
+          {loading ? 'Loading user data...' : `Hi ${username}, Welcome to SumDash!`}
         </Text>
 
         <LottieView
           source={require('../../../assets/welcome.json')}
           autoPlay
           loop
-          style={styles.lottieSmall}  // Updated style for smaller Lottie animation
+          style={styles.lottieSmall}
         />
 
         <Text style={[styles.title, isDarkMode && styles.darkTitle]}>Choose Your Level</Text>
@@ -111,8 +122,8 @@ const styles = StyleSheet.create({
     color: '#ffff00',
   },
   lottieSmall: {
-    width: 150, // Reduced size
-    height: 150, // Reduced size
+    width: 150,
+    height: 150,
     marginVertical: 20,
   },
   title: {

@@ -69,32 +69,42 @@ public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         return Unauthorized("Invalid credentials.");
     }
 
-    // Generate JWT token
+    /// Generate JWT token
     var token = GenerateJwtToken(user);
-    return Ok(new { Token = token, user = new { user.Email } });
-}
 
-
-        private string GenerateJwtToken(User user)
+    // Return the token along with user details (Email, Username, Id, ProfilePictureUrl)
+    return Ok(new 
+    {
+        Token = token,
+        User = new 
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Username)
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = _jwtSettings.Issuer,
-                Audience = _jwtSettings.Audience
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            user.Email,
+            user.Username,
+            user.Id,
+            user.ProfilePictureUrl // Optionally include profile picture URL
         }
-    }
+    });
 }
+
+private string GenerateJwtToken(User user)
+{
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+
+    var tokenDescriptor = new SecurityTokenDescriptor
+    {
+        Subject = new ClaimsIdentity(new[] 
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),  // Unique identifier for user
+            new Claim(ClaimTypes.Name, user.Username)                 // User's username
+        }),
+        Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
+        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+        Issuer = _jwtSettings.Issuer,
+        Audience = _jwtSettings.Audience
+    };
+
+    var token = tokenHandler.CreateToken(tokenDescriptor);
+    return tokenHandler.WriteToken(token);
+}
+}}

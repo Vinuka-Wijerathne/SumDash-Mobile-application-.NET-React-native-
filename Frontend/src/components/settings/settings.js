@@ -3,13 +3,23 @@ import React from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Ensure you have this installed
 import { useTheme } from '../../../ThemeContext'; // Ensure the path is correct
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const SettingsPage = ({ navigation }) => {
     const { isDarkMode, toggleTheme, fontStyle, updateFontStyle } = useTheme();
 
-    const handleLogout = () => {
-        // Add your logout logic here, such as clearing tokens or user data
-        navigation.navigate('login'); // Redirect to login page after logout
+    const handleLogout = async () => {
+        try {
+            // Clear all data from AsyncStorage
+            await AsyncStorage.clear();
+            console.log('All data cleared from AsyncStorage');
+    
+            // Navigate to the login screen
+            navigation.navigate('login');
+        } catch (error) {
+            console.error('Error clearing AsyncStorage:', error);
+        }
     };
 
     return (

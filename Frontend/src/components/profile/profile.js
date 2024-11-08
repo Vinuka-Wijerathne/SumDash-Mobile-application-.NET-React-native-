@@ -1,36 +1,109 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import Footer from '../footer/footer';
 import { useTheme } from '../../../ThemeContext';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
 
 const ProfilePage = () => {
   const { isDarkMode } = useTheme();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Retrieve the token from AsyncStorage or your global state
+        const token = await AsyncStorage.getItem('token'); // Assumes token is stored in AsyncStorage
+  
+        console.log("Token retrieved from AsyncStorage:", token);  // Log token for debugging
+  
+        if (!token) {
+          setError('No authentication token found');
+          setLoading(false);
+          return;
+        }
+  
+        // Retrieve the userId from AsyncStorage or global state
+        const userId = await AsyncStorage.getItem('userId'); // Assuming userId is stored in AsyncStorage
+  
+        console.log("User ID retrieved from AsyncStorage:", userId);  // Log userId for debugging
+  
+        if (!userId) {
+          setError('No user ID found');
+          setLoading(false);
+          return;
+        }
+  
+        // Make the API call to fetch user data
+        const response = await axios.get(`http://192.168.145.70:5000/api/user/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`, // Send token for authorization
+          }
+        });
+  
+        console.log("User data fetched successfully:", response.data);  // Log user data for debugging
+  
+        setUserData(response.data); // Set user data into state
+      } catch (err) {
+        console.log("Error fetching user data:", err);  // Log any error for debugging
+        setError('Failed to fetch user data');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchUserData();
+  }, []);
+  
+  if (loading) {
+    return (
+      <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+        <ActivityIndicator size="large" color={isDarkMode ? "#fff" : "#000"} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       {/* Profile Image */}
       <Image
-        source={require('../../../assets/Profile.png')} // Ensure this is the path to your default profile PNG
+        source={{ uri: userData.profilePictureUrl || '../../../assets/Profile.png' }} // Default image if profile picture URL is missing
         style={styles.profileImage}
       />
 
       {/* Username and Joined Date */}
-      <Text style={[styles.username, isDarkMode && styles.darkUsername]}>SumDash</Text>
-      <Text style={[styles.joinedDate, isDarkMode && styles.darkJoinedDate]}>Joined in 2020</Text>
+      <Text style={[styles.username, isDarkMode && styles.darkUsername]}>{userData.username}</Text>
+      <Text style={[styles.joinedDate, isDarkMode && styles.darkJoinedDate]}>
+        Joined in {new Date(userData.joinDate).getFullYear()}
+      </Text>
 
       {/* Stats */}
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Bananas</Text>
-          <Text style={styles.statValue}>2,000</Text>
+          <Text style={styles.statTitle}>Yellow Points</Text>
+          <Text style={styles.statValue}>{userData.yellowPoints || 0}</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Sums Completed</Text>
-          <Text style={styles.statValue}>1,234</Text>
+          <Text style={styles.statTitle}>Successful Attempts</Text>
+          <Text style={styles.statValue}>{userData.successfulAttempts || 0}</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Total Score</Text>
-          <Text style={styles.statValue}>9,999</Text>
+          <Text style={styles.statTitle}>Silver Points</Text>
+          <Text style={styles.statValue}>{userData.silverPoints || 0}</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={styles.statTitle}>Gold Points</Text>
+          <Text style={styles.statValue}>{userData.goldPoints || 0}</Text>
         </View>
       </View>
 
@@ -74,15 +147,15 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     width: '90%',
-    alignItems: 'center', // Centers the stats vertically
+    alignItems: 'center',
   },
   statBox: {
     backgroundColor: '#e0e0e0',
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
-    width: '100%', // Full width of the container
-    alignItems: 'center', // Center text within each box
+    width: '100%',
+    alignItems: 'center',
   },
   statTitle: {
     fontSize: 16,
@@ -92,6 +165,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

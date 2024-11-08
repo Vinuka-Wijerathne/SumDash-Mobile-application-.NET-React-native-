@@ -4,7 +4,6 @@ import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-
 const LoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,32 +12,46 @@ const LoginPage = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setErrorMessage('Please enter both email and password');
+      setMessage('Please enter both email and password');
       return;
     }
-
+  
     setLoading(true);
     try {
-      const response = await axios.post('http://192.168.8.105:5000/api/Auth/login', {
+      const response = await axios.post('http://192.168.145.70:5000/api/Auth/login', {
         email,
         passwordHash: password,
       });
-
+  
       if (response.status === 200) {
-        // Store the token in AsyncStorage
-        await AsyncStorage.setItem('userToken', response.data.token);
-        console.log('Login successful. Token:', response.data.token);
-
+        const { token, user } = response.data;
+  
+        // Store the token and user ID in AsyncStorage
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('userId', user.id);
+        console.log('Login successful. Token and user ID saved to AsyncStorage:', token, user.id);
+  
+        // Retrieve and log to verify saving
+        const savedToken = await AsyncStorage.getItem('token');
+        const savedUserId = await AsyncStorage.getItem('userId');
+        console.log('Retrieved token from AsyncStorage:', savedToken);
+        console.log('Retrieved userId from AsyncStorage:', savedUserId);
+  
+        // Navigate to the Dashboard
         navigation.navigate('Dashboard');
-        // Redirect to dashboard or another page if needed
+      } else {
+        setMessage('Login failed. Please try again.');
       }
     } catch (error) {
-      setErrorMessage('Login failed. Please check your credentials.');
+      setMessage('Login failed. Please check your credentials.');
       console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
   };
+  
+  
+  
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

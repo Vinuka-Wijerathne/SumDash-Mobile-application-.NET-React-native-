@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero // Eliminate any grace period for expired tokens
     };
 });
 
@@ -58,11 +58,10 @@ builder.Services.AddScoped<UserService>();
 // Configure CORS to allow requests from specific origins
 builder.Services.AddCors(options =>
 {
-   options.AddPolicy("AllowAll",
-    builder => builder.AllowAnyOrigin()
-                      .AllowAnyMethod()
-                      .AllowAnyHeader());
-
+    options.AddPolicy("AllowAll",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
 });
 
 // Add controllers
@@ -103,17 +102,20 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => 
+    app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
     });
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+
+// Enable CORS with the specified policy
 app.UseCors("AllowAll"); // Use the correct policy name here
 
-app.UseAuthentication(); // Enable authentication
-app.UseAuthorization();  // Enable authorization
+// Enable Authentication and Authorization
+app.UseAuthentication(); // This must come before UseAuthorization
+app.UseAuthorization();  // Ensure that authorization is enabled
 
 app.MapControllers(); // Map controller routes
 
