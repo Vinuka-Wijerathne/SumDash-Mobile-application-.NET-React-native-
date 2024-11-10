@@ -13,7 +13,7 @@ const LeaderboardPage = () => {
 
   useEffect(() => {
     // Fetch users data from backend
-    axios.get('http://192.168.145.70:5000/api/User/all')
+    axios.get('http://192.168.58.70:5000/api/User/all')
       .then(response => {
         console.log('Users Data:', response.data);
         setUsers(response.data);

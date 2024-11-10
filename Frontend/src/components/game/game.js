@@ -54,29 +54,16 @@ const GamePage = ({ route, navigation }) => {
   const showFeedback = (message, isError) => {
     setFeedbackMessage(message);
     setModalVisible(true);
-    if (isError) {
-      Animated.timing(animationValue, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        setTimeout(() => {
-          setModalVisible(false);
-          animationValue.setValue(0); // Reset for next use
-        }, 1000);
-      });
-    } else {
-      Animated.timing(animationValue, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        setTimeout(() => {
-          setModalVisible(false);
-          animationValue.setValue(0); // Reset for next use
-        }, 1000);
-      });
-    }
+    Animated.timing(animationValue, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      setTimeout(() => {
+        setModalVisible(false);
+        animationValue.setValue(0); // Reset for next use
+      }, 1000);
+    });
   };
 
   const feedbackStyle = {
@@ -87,7 +74,7 @@ const GamePage = ({ route, navigation }) => {
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Image source={require('../../../assets/back.png')} style={styles.backButtonImage} />
-        <Text style={styles.backButtonText}>Back</Text>
+        <Text style={[styles.backButtonText, isDarkMode && styles.darkButtonText]}>Back</Text>
       </TouchableOpacity>
       
       <Text style={[styles.timer, isDarkMode && styles.darkText]}>Time Left: {timeLeft}s</Text>
@@ -102,6 +89,7 @@ const GamePage = ({ route, navigation }) => {
         keyboardType="numeric"
         value={userAnswer}
         onChangeText={setUserAnswer}
+        placeholderTextColor={isDarkMode ? '#bbbbbb' : '#888888'}
       />
       <TouchableOpacity style={[styles.button, isDarkMode && styles.darkButton]} onPress={handleAnswerSubmit}>
         <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText]}>Submit</Text>
@@ -126,7 +114,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 16,
+    padding: 20,
     backgroundColor: '#f5f5f5',
   },
   darkContainer: {
@@ -136,49 +124,50 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 150,
+    
   },
   backButtonImage: {
     width: 24,
     height: 24,
-    marginRight: 8,
+    marginRight: 10,
   },
   backButtonText: {
     color: '#6200ee',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
-  timer: {
-    fontSize: 22,
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#ff4444', // Bright red for visibility
-    fontWeight: '700',
-  },
-  darkText: {
+  darkButtonText: {
     color: '#ffff00',
   },
-  score: {
-    fontSize: 22,
+  timer: {
+    fontSize: 24,
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#4CAF50', // Green for success
+    marginBottom: 15,
+    color: '#ff4444',
+    fontWeight: '700',
+  },
+  score: {
+    fontSize: 24,
+    textAlign: 'center',
+    marginBottom: 25,
+    color: '#4CAF50',
     fontWeight: '700',
   },
   questionImage: {
     width: '100%',
-    height: 180, // Adjusted height for a better fit
+    height: 200,
     resizeMode: 'contain',
-    marginBottom: 20,
+    marginBottom: 25,
     borderRadius: 10,
-    borderWidth: 2, // Thinner border
+    borderWidth: 2,
     borderColor: '#ddd',
   },
   input: {
     borderColor: '#6200ee',
     borderWidth: 1,
-    padding: 10,
-    marginBottom: 16,
-    borderRadius: 30, // More rounded corners
+    padding: 15,
+    marginBottom: 25,
+    borderRadius: 25,
     fontSize: 18,
     color: '#333',
   },
@@ -188,21 +177,18 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#6200ee',
-    paddingVertical: 10, // Smaller button height
-    borderRadius: 30, // More rounded corners
+    paddingVertical: 15,
+    borderRadius: 25,
     alignItems: 'center',
-    marginTop: 10,
+    
   },
   darkButton: {
     backgroundColor: '#444444',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16, // Slightly smaller text size
+    fontSize: 18,
     fontWeight: '600',
-  },
-  darkButtonText: {
-    color: '#ffff00',
   },
   modalContainer: {
     flex: 1,
@@ -212,18 +198,29 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    padding: 20,
-    borderRadius: 10,
+    padding: 25,
+    borderRadius: 12,
     backgroundColor: '#fff',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   modalCloseButton: {
     marginTop: 15,
     color: '#6200ee',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '500',
   },
-  modalDarkContent: {
-    backgroundColor: '#444444',
+  darkText: {
+    color: '#ffff00',
   },
 });
 

@@ -5,8 +5,7 @@ namespace react {
 
 extern const char RNSModalScreenComponentName[] = "RNSModalScreen";
 
-Point RNSModalScreenShadowNode::getContentOriginOffset(
-    bool /*includeTransform*/) const {
+Point RNSModalScreenShadowNode::getContentOriginOffset() const {
   auto stateData = getStateData();
   auto contentOffset = stateData.contentOffset;
   return {contentOffset.x, contentOffset.y};

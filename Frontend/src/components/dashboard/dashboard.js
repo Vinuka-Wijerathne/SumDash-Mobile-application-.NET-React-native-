@@ -9,7 +9,7 @@ import { useTheme } from '../../../ThemeContext';
 import axios from 'axios';
 
 const DashboardPage = ({ navigation }) => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, fontStyle } = useTheme(); // Fetch fontStyle from theme context
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +37,7 @@ const DashboardPage = ({ navigation }) => {
         }
 
         // Fetch user data with token and userId
-        const response = await axios.get(`http://192.168.145.70:5000/api/User/${userId}`, {
+        const response = await axios.get(`http://192.168.58.70:5000/api/User/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -51,9 +51,7 @@ const DashboardPage = ({ navigation }) => {
     };
 
     fetchUserData();
-}, []);
-
- 
+  }, []);
 
   const handleLevelSelect = (level) => {
     navigation.navigate('Game', { timeLimit: level.timeLimit });
@@ -66,7 +64,13 @@ const DashboardPage = ({ navigation }) => {
         colors={isDarkMode ? ['#333333', '#444444'] : ['#ffffff', '#e0e0ff']}
         style={styles.contentContainer}
       >
-        <Text style={[styles.welcomeText, isDarkMode && styles.darkWelcomeText]}>
+        <Text
+          style={[
+            styles.welcomeText,
+            { fontFamily: fontStyle }, // Apply the selected font style here
+            isDarkMode && styles.darkWelcomeText,
+          ]}
+        >
           {loading ? 'Loading user data...' : `Hi ${username}, Welcome to SumDash!`}
         </Text>
 
@@ -77,7 +81,15 @@ const DashboardPage = ({ navigation }) => {
           style={styles.lottieSmall}
         />
 
-        <Text style={[styles.title, isDarkMode && styles.darkTitle]}>Choose Your Level</Text>
+        <Text
+          style={[
+            styles.title,
+            { fontFamily: fontStyle }, // Apply the selected font style here
+            isDarkMode && styles.darkTitle,
+          ]}
+        >
+          Choose Your Level
+        </Text>
 
         {levels.map((level, index) => (
           <TouchableOpacity
@@ -85,8 +97,24 @@ const DashboardPage = ({ navigation }) => {
             style={[styles.button, isDarkMode && styles.darkButton]}
             onPress={() => handleLevelSelect(level)}
           >
-            <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText]}>{level.name}</Text>
-            <Text style={[styles.timeText, isDarkMode && styles.darkTimeText]}>{level.timeLimit} seconds</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                { fontFamily: fontStyle }, // Apply the selected font style here
+                isDarkMode && styles.darkButtonText,
+              ]}
+            >
+              {level.name}
+            </Text>
+            <Text
+              style={[
+                styles.timeText,
+                { fontFamily: fontStyle }, // Apply the selected font style here
+                isDarkMode && styles.darkTimeText,
+              ]}
+            >
+              {level.timeLimit} seconds
+            </Text>
           </TouchableOpacity>
         ))}
       </LinearGradient>

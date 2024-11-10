@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
-import Footer from '../footer/footer';
+import { View, Text, Image, StyleSheet, ActivityIndicator, Button, Alert } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useTheme } from '../../../ThemeContext';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Footer from '../footer/footer';
+
+// Import Firebase config from the root directory (already initialized)
+import { storage } from '../../../firebaseConfig';
 
 const ProfilePage = () => {
   const { isDarkMode } = useTheme();
@@ -14,49 +19,57 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Retrieve the token from AsyncStorage or your global state
-        const token = await AsyncStorage.getItem('token'); // Assumes token is stored in AsyncStorage
-  
-        console.log("Token retrieved from AsyncStorage:", token);  // Log token for debugging
-  
-        if (!token) {
-          setError('No authentication token found');
+        const token = await AsyncStorage.getItem('token');
+        const userId = await AsyncStorage.getItem('userId');
+
+        if (!token || !userId) {
+          setError('No authentication token or user ID found');
           setLoading(false);
           return;
         }
-  
-        // Retrieve the userId from AsyncStorage or global state
-        const userId = await AsyncStorage.getItem('userId'); // Assuming userId is stored in AsyncStorage
-  
-        console.log("User ID retrieved from AsyncStorage:", userId);  // Log userId for debugging
-  
-        if (!userId) {
-          setError('No user ID found');
-          setLoading(false);
-          return;
-        }
-  
-        // Make the API call to fetch user data
-        const response = await axios.get(`http://192.168.145.70:5000/api/user/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`, // Send token for authorization
-          }
+
+        const response = await axios.get(`http://192.168.58.70:5000/api/user/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-  
-        console.log("User data fetched successfully:", response.data);  // Log user data for debugging
-  
-        setUserData(response.data); // Set user data into state
+
+        setUserData(response.data);
       } catch (err) {
-        console.log("Error fetching user data:", err);  // Log any error for debugging
         setError('Failed to fetch user data');
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchUserData();
   }, []);
-  
+
+  const handleImageUpload = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission to access gallery is required!");
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync();
+    if (!pickerResult.cancelled) {
+      const uri = pickerResult.uri;
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const storageRef = ref(storage, `profile_pictures/${userData.userId}`);
+      try {
+        await uploadBytes(storageRef, blob);
+        const downloadURL = await getDownloadURL(storageRef);
+        console.log('Image uploaded successfully:', downloadURL);
+        
+        setUserData((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
+      } catch (uploadError) {
+        console.error('Image upload failed:', uploadError);
+        Alert.alert("Image upload failed. Please try again.");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, isDarkMode && styles.darkContainer]}>
@@ -73,21 +86,17 @@ const ProfilePage = () => {
     );
   }
 
+  const profileImageUrl = userData.profilePictureUrl || require('../../../assets/Profile.png');
+
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      {/* Profile Image */}
-      <Image
-        source={{ uri: userData.profilePictureUrl || '../../../assets/Profile.png' }} // Default image if profile picture URL is missing
-        style={styles.profileImage}
-      />
-
-      {/* Username and Joined Date */}
+      <Image source={profileImageUrl} style={styles.profileImage} />
+      <Button title="Upload Profile Picture" onPress={handleImageUpload} />
       <Text style={[styles.username, isDarkMode && styles.darkUsername]}>{userData.username}</Text>
       <Text style={[styles.joinedDate, isDarkMode && styles.darkJoinedDate]}>
         Joined in {new Date(userData.joinDate).getFullYear()}
       </Text>
 
-      {/* Stats */}
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
           <Text style={styles.statTitle}>Yellow Points</Text>

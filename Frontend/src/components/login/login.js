@@ -18,7 +18,7 @@ const LoginPage = ({ navigation }) => {
   
     setLoading(true);
     try {
-      const response = await axios.post('http://192.168.145.70:5000/api/Auth/login', {
+      const response = await axios.post('http://192.168.58.70:5000/api/Auth/login', {
         email,
         passwordHash: password,
       });
