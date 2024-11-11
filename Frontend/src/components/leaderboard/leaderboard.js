@@ -6,7 +6,7 @@ import Footer from '../footer/footer'; // Ensure Footer is imported
 import { useTheme } from '../../../ThemeContext'; // Ensure ThemeContext is imported
 
 const LeaderboardPage = () => {
-  const { isDarkMode } = useTheme(); // Get the dark mode status
+  const { isDarkMode, fontStyle } = useTheme(); // Retrieve both isDarkMode and fontStyle from the theme context
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState('all'); // Default is 'all' to show all users
@@ -45,12 +45,14 @@ const LeaderboardPage = () => {
       <View style={[styles.leaderboardItem, isDarkMode && styles.darkLeaderboardItem]}>
         <Image source={{ uri: item.profilePictureUrl || 'https://via.placeholder.com/50' }} style={styles.avatar} />
         <View style={styles.textContainer}>
-          <Text style={[styles.username, isDarkMode && styles.darkUsername]}>{item.username}</Text>
-          <Text style={[styles.rank, isDarkMode && styles.darkRank]}>
+          <Text style={[styles.username, isDarkMode && styles.darkUsername, fontStyle && { fontFamily: fontStyle }]}>
+            {item.username}
+          </Text>
+          <Text style={[styles.rank, isDarkMode && styles.darkRank, fontStyle && { fontFamily: fontStyle }]}>
             {item.yellowPoints > 0 ? 'Yellow Rank' : item.silverPoints > 0 ? 'Silver Rank' : 'Gold Rank'}
           </Text>
         </View>
-        <Text style={[styles.score, isDarkMode && styles.darkScore]}>
+        <Text style={[styles.score, isDarkMode && styles.darkScore, fontStyle && { fontFamily: fontStyle }]}>
           {item.yellowPoints > 0 ? item.yellowPoints : item.silverPoints > 0 ? item.silverPoints : item.goldPoints}
         </Text>
       </View>
@@ -65,13 +67,13 @@ const LeaderboardPage = () => {
       {/* Filter Dropdowns */}
       <View style={styles.filterContainer}>
         <TouchableOpacity style={styles.filterButton} onPress={() => filterByLeague('yellow')}>
-          <Text style={styles.filterText}>Yellow ▼</Text>
+          <Text style={[styles.filterText, fontStyle && { fontFamily: fontStyle }]}>Yellow ▼</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.filterButton} onPress={() => filterByLeague('silver')}>
-          <Text style={styles.filterText}>Silver ▼</Text>
+          <Text style={[styles.filterText, fontStyle && { fontFamily: fontStyle }]}>Silver ▼</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.filterButton} onPress={() => filterByLeague('gold')}>
-          <Text style={styles.filterText}>Gold ▼</Text>
+          <Text style={[styles.filterText, fontStyle && { fontFamily: fontStyle }]}>Gold ▼</Text>
         </TouchableOpacity>
       </View>
 
@@ -91,7 +93,6 @@ const LeaderboardPage = () => {
 
 const styles = StyleSheet.create({
   container: {
-    
     flex: 1,
     backgroundColor: '#ffffff',
   },
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#222222',
   },
   filterContainer: {
-    marginTop:100,
+    marginTop: 100,
     flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: 10,

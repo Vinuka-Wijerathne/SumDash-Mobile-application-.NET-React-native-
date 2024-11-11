@@ -5,7 +5,7 @@ import { useTheme } from '../../../ThemeContext'; // Import your theme context
 
 const GamePage = ({ route, navigation }) => {
   const { timeLimit } = route.params; // Retrieve time limit from navigation params
-  const { isDarkMode } = useTheme(); // Get the theme state
+  const { isDarkMode, fontStyle } = useTheme(); // Get the theme state including fontStyle
   const [questionImage, setQuestionImage] = useState('');
   const [solution, setSolution] = useState(null);
   const [userAnswer, setUserAnswer] = useState('');
@@ -74,17 +74,17 @@ const GamePage = ({ route, navigation }) => {
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Image source={require('../../../assets/back.png')} style={styles.backButtonImage} />
-        <Text style={[styles.backButtonText, isDarkMode && styles.darkButtonText]}>Back</Text>
+        <Text style={[styles.backButtonText, isDarkMode && styles.darkButtonText, fontStyle]}>Back</Text>
       </TouchableOpacity>
       
-      <Text style={[styles.timer, isDarkMode && styles.darkText]}>Time Left: {timeLeft}s</Text>
-      <Text style={[styles.score, isDarkMode && styles.darkText]}>Score: {score}</Text>
+      <Text style={[styles.timer, isDarkMode && styles.darkText, fontStyle]}>Time Left: {timeLeft}s</Text>
+      <Text style={[styles.score, isDarkMode && styles.darkText, fontStyle]}>Score: {score}</Text>
       
       {/* Display the question image */}
       <Image source={{ uri: questionImage }} style={styles.questionImage} />
 
       <TextInput
-        style={[styles.input, isDarkMode && styles.darkInput]}
+        style={[styles.input, isDarkMode && styles.darkInput, fontStyle]}
         placeholder="Enter your answer"
         keyboardType="numeric"
         value={userAnswer}
@@ -92,16 +92,16 @@ const GamePage = ({ route, navigation }) => {
         placeholderTextColor={isDarkMode ? '#bbbbbb' : '#888888'}
       />
       <TouchableOpacity style={[styles.button, isDarkMode && styles.darkButton]} onPress={handleAnswerSubmit}>
-        <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText]}>Submit</Text>
+        <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>Submit</Text>
       </TouchableOpacity>
 
       {/* Feedback Modal */}
       <Modal transparent={true} animationType="fade" visible={modalVisible}>
         <View style={[styles.modalContainer, isDarkMode && styles.darkContainer]}>
           <Animated.View style={[styles.modalContent, feedbackStyle]}>
-            <Text style={[styles.modalText, isDarkMode && styles.darkText]}>{feedbackMessage}</Text>
+            <Text style={[styles.modalText, isDarkMode && styles.darkText, fontStyle]}>{feedbackMessage}</Text>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={[styles.modalCloseButton, isDarkMode && styles.darkButtonText]}>Close</Text>
+              <Text style={[styles.modalCloseButton, isDarkMode && styles.darkButtonText, fontStyle]}>Close</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 150,
-    
   },
   backButtonImage: {
     width: 24,
@@ -180,7 +179,6 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 25,
     alignItems: 'center',
-    
   },
   darkButton: {
     backgroundColor: '#444444',

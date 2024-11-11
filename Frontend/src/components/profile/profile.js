@@ -11,7 +11,7 @@ import Footer from '../footer/footer';
 import { storage } from '../../../firebaseConfig';
 
 const ProfilePage = () => {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, fontStyle } = useTheme(); // Retrieve fontStyle from the theme context
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,7 +81,7 @@ const ProfilePage = () => {
   if (error) {
     return (
       <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.errorText, { fontFamily: fontStyle }]}>{error}</Text>
       </View>
     );
   }
@@ -92,27 +92,29 @@ const ProfilePage = () => {
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <Image source={profileImageUrl} style={styles.profileImage} />
       <Button title="Upload Profile Picture" onPress={handleImageUpload} />
-      <Text style={[styles.username, isDarkMode && styles.darkUsername]}>{userData.username}</Text>
-      <Text style={[styles.joinedDate, isDarkMode && styles.darkJoinedDate]}>
+      <Text style={[styles.username, isDarkMode && styles.darkUsername, { fontFamily: fontStyle }]}>
+        {userData.username}
+      </Text>
+      <Text style={[styles.joinedDate, isDarkMode && styles.darkJoinedDate, { fontFamily: fontStyle }]}>
         Joined in {new Date(userData.joinDate).getFullYear()}
       </Text>
 
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Yellow Points</Text>
-          <Text style={styles.statValue}>{userData.yellowPoints || 0}</Text>
+          <Text style={[styles.statTitle, { fontFamily: fontStyle }]}>Yellow Points</Text>
+          <Text style={[styles.statValue, { fontFamily: fontStyle }]}>{userData.yellowPoints || 0}</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Successful Attempts</Text>
-          <Text style={styles.statValue}>{userData.successfulAttempts || 0}</Text>
+          <Text style={[styles.statTitle, { fontFamily: fontStyle }]}>Successful Attempts</Text>
+          <Text style={[styles.statValue, { fontFamily: fontStyle }]}>{userData.successfulAttempts || 0}</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Silver Points</Text>
-          <Text style={styles.statValue}>{userData.silverPoints || 0}</Text>
+          <Text style={[styles.statTitle, { fontFamily: fontStyle }]}>Silver Points</Text>
+          <Text style={[styles.statValue, { fontFamily: fontStyle }]}>{userData.silverPoints || 0}</Text>
         </View>
         <View style={styles.statBox}>
-          <Text style={styles.statTitle}>Gold Points</Text>
-          <Text style={styles.statValue}>{userData.goldPoints || 0}</Text>
+          <Text style={[styles.statTitle, { fontFamily: fontStyle }]}>Gold Points</Text>
+          <Text style={[styles.statValue, { fontFamily: fontStyle }]}>{userData.goldPoints || 0}</Text>
         </View>
       </View>
 

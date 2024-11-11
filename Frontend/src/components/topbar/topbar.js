@@ -1,4 +1,3 @@
-// src/components/TopBar.js
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -8,7 +7,7 @@ import { useTheme } from '../../../ThemeContext';
 const TopBar = ({ profileImage, logo }) => {
   const navigation = useNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme, fontStyle } = useTheme(); // Retrieve fontStyle from ThemeContext
   const slideAnim = new Animated.Value(-250);
 
   const toggleSidebar = () => {
@@ -22,16 +21,18 @@ const TopBar = ({ profileImage, logo }) => {
 
   return (
     <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
-      <Text style={[styles.title, isDarkMode ? styles.darkTitle : styles.lightTitle]}>SumDash</Text>
+      <Text style={[styles.title, { fontFamily: fontStyle }, isDarkMode ? styles.darkTitle : styles.lightTitle]}>
+        SumDash
+      </Text>
       
       <View style={styles.themeToggleContainer}>
-        <Text style={[styles.themeToggleLabel, isDarkMode ? styles.darkThemeLabel : styles.lightThemeLabel]}>
+        <Text style={[styles.themeToggleLabel, { fontFamily: fontStyle }, isDarkMode ? styles.darkThemeLabel : styles.lightThemeLabel]}>
           {isDarkMode ? 'Dark Mode' : 'Light Mode'}
         </Text>
         <Switch
           value={isDarkMode}
           onValueChange={toggleTheme}
-          thumbColor={isDarkMode ? "#fffff" : "#000000"}
+          thumbColor={isDarkMode ? "#ffffff" : "#000000"}
           trackColor={{ false: "#ddd", true: "#FFD700" }}
           style={styles.themeToggleSwitch}
         />
@@ -42,22 +43,22 @@ const TopBar = ({ profileImage, logo }) => {
       </TouchableOpacity>
 
       <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
-        <Text style={styles.sidebarTitle}>Menu</Text>
+        <Text style={[styles.sidebarTitle, { fontFamily: fontStyle }]}>Menu</Text>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Leaderboard')}>
           <Icon name="trophy-outline" size={20} color="#FFD700" />
-          <Text style={styles.menuText}>Leaderboard</Text>
+          <Text style={[styles.menuText, { fontFamily: fontStyle }]}>Leaderboard</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Dashboard')}>
           <Icon name="home-outline" size={20} color="#FFD700" />
-          <Text style={styles.menuText}>Dashboard</Text>
+          <Text style={[styles.menuText, { fontFamily: fontStyle }]}>Dashboard</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Profile')}>
           <Icon name="person-outline" size={20} color="#FFD700" />
-          <Text style={styles.menuText}>Profile</Text>
+          <Text style={[styles.menuText, { fontFamily: fontStyle }]}>Profile</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Settings')}>
           <Icon name="settings-outline" size={20} color="#FFD700" />
-          <Text style={styles.menuText}>Settings</Text>
+          <Text style={[styles.menuText, { fontFamily: fontStyle }]}>Settings</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: 'space-between',
     position: 'absolute',
-    top: 20, // Adjusted top margin to bring down
+    top: 20,
     left: 0,
     right: 0,
     height: 70,

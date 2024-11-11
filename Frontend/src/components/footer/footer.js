@@ -6,25 +6,33 @@ import { useTheme } from '../../../ThemeContext';
 
 const Footer = () => {
   const navigation = useNavigation();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, fontStyle } = useTheme(); // Retrieve fontStyle from the theme context
 
   return (
     <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
       <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('Dashboard')}>
         <Icon name="home-outline" size={24} color={isDarkMode ? '#FFD700' : '#000000'} />
-        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText]}>Dashboard</Text>
+        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText, { fontFamily: fontStyle }]}>
+          Dashboard
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('Leaderboard')}>
         <Icon name="trophy-outline" size={24} color={isDarkMode ? '#FFD700' : '#000000'} />
-        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText]}>Leaderboard</Text>
+        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText, { fontFamily: fontStyle }]}>
+          Leaderboard
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('Profile')}>
         <Icon name="person-outline" size={24} color={isDarkMode ? '#FFD700' : '#000000'} />
-        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText]}>Profile</Text>
+        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText, { fontFamily: fontStyle }]}>
+          Profile
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate('Settings')}>
         <Icon name="settings-outline" size={24} color={isDarkMode ? '#FFD700' : '#000000'} />
-        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText]}>Settings</Text>
+        <Text style={[styles.footerText, isDarkMode ? styles.darkText : styles.lightText, { fontFamily: fontStyle }]}>
+          Settings
+        </Text>
       </TouchableOpacity>
     </View>
   );
