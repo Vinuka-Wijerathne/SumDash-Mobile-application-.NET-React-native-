@@ -49,26 +49,32 @@ const ProfilePage = () => {
       Alert.alert("Permission to access gallery is required!");
       return;
     }
-
+  
     const pickerResult = await ImagePicker.launchImageLibraryAsync();
     if (!pickerResult.cancelled) {
       const uri = pickerResult.uri;
       const response = await fetch(uri);
       const blob = await response.blob();
-
+  
       const storageRef = ref(storage, `profile_pictures/${userData.userId}`);
       try {
         await uploadBytes(storageRef, blob);
         const downloadURL = await getDownloadURL(storageRef);
-        console.log('Image uploaded successfully:', downloadURL);
         
-        setUserData((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
+        if (downloadURL) {
+          console.log('Image uploaded successfully:', downloadURL); // Log the saved URL
+          setUserData((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
+        } else {
+          console.log('Image URL was not saved.'); // Log if the URL wasn't saved
+          Alert.alert("Image upload failed. Please try again.");
+        }
       } catch (uploadError) {
         console.error('Image upload failed:', uploadError);
         Alert.alert("Image upload failed. Please try again.");
       }
     }
   };
+  
 
   if (loading) {
     return (

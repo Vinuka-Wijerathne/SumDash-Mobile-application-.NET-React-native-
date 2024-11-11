@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Share } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Ensure you have this installed
 import { useTheme } from '../../../ThemeContext'; // Ensure the path is correct
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,6 +14,25 @@ const SettingsPage = ({ navigation }) => {
       navigation.navigate('login');
     } catch (error) {
       console.error('Error clearing AsyncStorage:', error);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const result = await Share.share({
+        message: 'Join me in playing this amazing game! Check it out here: [Your Game Link]',
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('Shared with activity type: ' + result.activityType);
+        } else {
+          console.log('Shared');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log('Dismissed');
+      }
+    } catch (error) {
+      console.error('Error sharing', error);
     }
   };
 
@@ -80,6 +99,10 @@ const SettingsPage = ({ navigation }) => {
         </Picker>
       </View>
 
+      <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+        <Text style={[styles.shareButtonText, { fontFamily: fontStyle }]}>Share & Invite</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
         <Text style={[styles.logoutButtonText, { fontFamily: fontStyle }]}>Logout</Text>
       </TouchableOpacity>
@@ -135,6 +158,17 @@ const styles = StyleSheet.create({
     height: 50,
     width: 150,
     color: '#000',
+  },
+  shareButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#4CAF50',
+    borderRadius: 5,
+  },
+  shareButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   logoutButton: {
     marginTop: 20,

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, Image } from 'react-native';
 import axios from 'axios';
-import { useTheme } from '../../../ThemeContext'; // Import your theme context
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../../ThemeContext';
 
 const GamePage = ({ route, navigation }) => {
-  const { timeLimit } = route.params; // Retrieve time limit from navigation params
-  const { isDarkMode, fontStyle } = useTheme(); // Get the theme state including fontStyle
+  const { timeLimit } = route.params;
+  const { isDarkMode, fontStyle } = useTheme();
   const [questionImage, setQuestionImage] = useState('');
   const [solution, setSolution] = useState(null);
   const [userAnswer, setUserAnswer] = useState('');
@@ -14,6 +15,7 @@ const GamePage = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [animationValue] = useState(new Animated.Value(0));
+  const [isAnswerIncorrect, setIsAnswerIncorrect] = useState(false);  // Track if the answer is incorrect
 
   useEffect(() => {
     fetchQuestion();
@@ -24,34 +26,84 @@ const GamePage = ({ route, navigation }) => {
   useEffect(() => {
     if (timeLeft === 0) {
       showFeedback(`Game Over! Your score is ${score}`, true);
-      navigation.navigate('Dashboard'); // Navigate to the dashboard on game over
+      navigation.navigate('Dashboard');
     }
   }, [timeLeft]);
 
+  const getToken = async () => {
+    const token = await AsyncStorage.getItem('token');
+    console.log('Token:', token);  // Log the token value
+    return token;
+  };
+
   const fetchQuestion = async () => {
     try {
+      console.log('Fetching question...');
       const response = await axios.get('https://marcconrad.com/uob/banana/api.php');
-      setQuestionImage(response.data.question); // Set image URL for the question
-      setSolution(response.data.solution); // Set solution for validation
-      setUserAnswer(''); // Clear user input
+      console.log('Question fetched:', response.data);  // Log the fetched question data
+      setQuestionImage(response.data.question);
+      setSolution(response.data.solution);
+      setUserAnswer('');
+      setIsAnswerIncorrect(false);  // Reset incorrect answer state when a new question is fetched
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching question:', error);  // Log the error
+    }
+  };
+
+  const getUserId = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    console.log('User ID:', userId);  // Log the user ID
+    return userId;  // Ensure userId is saved in AsyncStorage
+  };
+
+  const updatePoints = async (pointType) => {
+    try {
+      const token = await getToken();
+      const userId = await getUserId();
+      if (!userId) {
+        console.error("User ID is missing");
+        return;
+      }
+
+      console.log('Updating points with pointType:', pointType);  // Log point type
+      const response = await axios.put(
+        `http://192.168.58.70:5000/api/user/${userId}/updatePoints`,
+        { [pointType]: 1, SuccessfulAttempts: 1 },  // Dynamic point update
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Points updated:", response.data);  // Log response after updating points
+    } catch (error) {
+      console.error("Failed to update points:", error);  // Log error if point update fails
     }
   };
 
   const handleAnswerSubmit = () => {
+    console.log('User answer submitted:', userAnswer);  // Log the user answer
     if (parseInt(userAnswer) === solution) {
+      console.log('Correct answer!');  // Log correct answer
       setScore(score + 1);
-      setTimeLeft(timeLimit); // Reset timer on correct answer
-      showFeedback('Correct Answer!', false); // Show feedback for correct answer
-      fetchQuestion(); // Load a new question on correct answer
+      setTimeLeft(timeLimit);
+      showFeedback('Correct Answer!', false);
+      fetchQuestion();
+
+      // Determine point type based on selected level
+      const pointType =
+        timeLimit === 60 ? "YellowPoints" :
+        timeLimit === 45 ? "SilverPoints" : "GoldPoints";
+
+      updatePoints(pointType);  // Pass the point type for scoring
     } else {
-      showFeedback('Incorrect Answer! Try again.', true); // Show feedback for incorrect answer
+      console.log('Incorrect answer.');  // Log incorrect answer
+      showFeedback(`Incorrect Answer! The correct answer is ${solution}`, true);
+      setIsAnswerIncorrect(true);  // Mark the answer as incorrect
     }
-    setUserAnswer(''); // Clear input field after submission
+    setUserAnswer('');
   };
 
   const showFeedback = (message, isError) => {
+    console.log('Feedback message:', message);  // Log the feedback message
     setFeedbackMessage(message);
     setModalVisible(true);
     Animated.timing(animationValue, {
@@ -61,13 +113,17 @@ const GamePage = ({ route, navigation }) => {
     }).start(() => {
       setTimeout(() => {
         setModalVisible(false);
-        animationValue.setValue(0); // Reset for next use
+        animationValue.setValue(0);
       }, 1000);
     });
   };
 
   const feedbackStyle = {
     opacity: animationValue,
+  };
+
+  const handleTryAgain = () => {
+    fetchQuestion();  // Load a new question when user clicks "Try Again"
   };
 
   return (
@@ -90,10 +146,26 @@ const GamePage = ({ route, navigation }) => {
         value={userAnswer}
         onChangeText={setUserAnswer}
         placeholderTextColor={isDarkMode ? '#bbbbbb' : '#888888'}
+        editable={!isAnswerIncorrect}  // Disable input if the answer is incorrect
       />
-      <TouchableOpacity style={[styles.button, isDarkMode && styles.darkButton]} onPress={handleAnswerSubmit}>
-        <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>Submit</Text>
+      <TouchableOpacity 
+        style={[styles.button, isDarkMode && styles.darkButton]} 
+        onPress={handleAnswerSubmit} 
+        disabled={isAnswerIncorrect}  // Disable button if the answer is incorrect
+      >
+        <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>
+          Submit
+        </Text>
       </TouchableOpacity>
+
+      {/* Try Again Button */}
+      {isAnswerIncorrect && (
+        <TouchableOpacity style={[styles.button, isDarkMode && styles.darkButton]} onPress={handleTryAgain}>
+          <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>
+            Try Again
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {/* Feedback Modal */}
       <Modal transparent={true} animationType="fade" visible={modalVisible}>
@@ -155,36 +227,32 @@ const styles = StyleSheet.create({
   questionImage: {
     width: '100%',
     height: 200,
-    resizeMode: 'contain',
-    marginBottom: 25,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#ddd',
+    marginBottom: 20,
   },
   input: {
+    height: 40,
     borderColor: '#6200ee',
-    borderWidth: 1,
-    padding: 15,
-    marginBottom: 25,
-    borderRadius: 25,
-    fontSize: 18,
-    color: '#333',
+    borderWidth: 2,
+    borderRadius: 5,
+    marginBottom: 15,
+    paddingLeft: 10,
   },
   darkInput: {
-    borderColor: '#ffff00',
-    color: '#ffff00',
+    backgroundColor: '#333333',
+    color: '#ffffff',
   },
   button: {
     backgroundColor: '#6200ee',
-    paddingVertical: 15,
-    borderRadius: 25,
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
     alignItems: 'center',
   },
   darkButton: {
     backgroundColor: '#444444',
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -195,30 +263,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
-    padding: 25,
-    borderRadius: 12,
-    backgroundColor: '#fff',
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    width: 250,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   modalText: {
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontSize: 18,
+    marginBottom: 15,
   },
   modalCloseButton: {
-    marginTop: 15,
     color: '#6200ee',
     fontSize: 18,
-    fontWeight: '500',
-  },
-  darkText: {
-    color: '#ffff00',
+    fontWeight: '600',
   },
 });
 

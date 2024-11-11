@@ -101,40 +101,40 @@ public class UserController : ControllerBase
         return Ok("Profile updated successfully.");
     }
 
-    // PUT: Update points and successful attempts by user ID
-    [Authorize]
-    [HttpPut("{userId}/updatePoints")]
-    public async Task<IActionResult> UpdatePoints(string userId, [FromBody] User pointsUpdate)
+[Authorize]
+[HttpPut("{userId}/updatePoints")]
+public async Task<IActionResult> UpdatePoints(string userId, [FromBody] User pointsUpdate)
+{
+    if (string.IsNullOrEmpty(userId))
     {
-        if (string.IsNullOrEmpty(userId))
-        {
-            return BadRequest("User ID is required.");
-        }
-
-        // Convert userId to ObjectId
-        ObjectId objectId;
-        try
-        {
-            objectId = ObjectId.Parse(userId);
-        }
-        catch
-        {
-            return BadRequest("Invalid user ID format.");
-        }
-
-        var update = Builders<User>.Update
-            .Inc(u => u.YellowPoints, pointsUpdate.YellowPoints)
-            .Inc(u => u.SilverPoints, pointsUpdate.SilverPoints)
-            .Inc(u => u.GoldPoints, pointsUpdate.GoldPoints)
-            .Inc(u => u.SuccessfulAttempts, pointsUpdate.SuccessfulAttempts);
-
-        var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
-
-        if (result.MatchedCount == 0)
-            return NotFound("User not found.");
-
-        return Ok("Points updated successfully.");
+        return BadRequest("User ID is required.");
     }
+
+    // Parse userId as ObjectId
+    ObjectId objectId;
+    try
+    {
+        objectId = ObjectId.Parse(userId);
+    }
+    catch (FormatException)
+    {
+        return BadRequest("Invalid user ID format.");
+    }
+
+    var update = Builders<User>.Update
+        .Inc(u => u.YellowPoints, pointsUpdate.YellowPoints)
+        .Inc(u => u.SilverPoints, pointsUpdate.SilverPoints)
+        .Inc(u => u.GoldPoints, pointsUpdate.GoldPoints)
+        .Inc(u => u.SuccessfulAttempts, pointsUpdate.SuccessfulAttempts);
+
+    var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
+
+    if (result.MatchedCount == 0)
+        return NotFound("User not found.");
+
+    return Ok("Points updated successfully.");
+}
+
 
     // DELETE: Delete user account by user ID
     [Authorize]
