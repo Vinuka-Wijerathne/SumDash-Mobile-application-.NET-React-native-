@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using BackendAPI.Models;  // Ensure this is included
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 [Route("api/[controller]")]
@@ -27,33 +27,16 @@ public class UserController : ControllerBase
 
     // GET: Retrieve user information by user ID
     [Authorize]
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:length(24)}")] // Ensure userId is 24 characters for ObjectId
     public async Task<ActionResult<User>> GetUserById(string userId)
     {
-        if (string.IsNullOrEmpty(userId))
-        {
-            return BadRequest("User ID is required.");
-        }
-
-        // Convert userId to ObjectId
-        ObjectId objectId;
-        try
-        {
-            objectId = ObjectId.Parse(userId);
-        }
-        catch
-        {
+        if (!ObjectId.TryParse(userId, out var objectId))
             return BadRequest("Invalid user ID format.");
-        }
 
-        // Find the user by ID in MongoDB
         var user = await _users.Find(u => u.Id == objectId.ToString()).FirstOrDefaultAsync();
         if (user == null)
-        {
             return NotFound("User not found.");
-        }
 
-        // Return user information without exposing the password hash
         return Ok(new
         {
             user.Id,
@@ -69,24 +52,11 @@ public class UserController : ControllerBase
 
     // PUT: Update username, password, or profile picture by user ID
     [Authorize]
-    [HttpPut("{userId}/updateProfile")]
+    [HttpPut("{userId:length(24)}/updateProfile")]
     public async Task<IActionResult> UpdateProfile(string userId, [FromBody] User userProfileUpdate)
     {
-        if (string.IsNullOrEmpty(userId))
-        {
-            return BadRequest("User ID is required.");
-        }
-
-        // Convert userId to ObjectId
-        ObjectId objectId;
-        try
-        {
-            objectId = ObjectId.Parse(userId);
-        }
-        catch
-        {
+        if (!ObjectId.TryParse(userId, out var objectId))
             return BadRequest("Invalid user ID format.");
-        }
 
         var update = Builders<User>.Update
             .Set(u => u.Username, userProfileUpdate.Username)
@@ -101,61 +71,40 @@ public class UserController : ControllerBase
         return Ok("Profile updated successfully.");
     }
 
-[Authorize]
-[HttpPut("{userId}/updatePoints")]
-public async Task<IActionResult> UpdatePoints(string userId, [FromBody] User pointsUpdate)
-{
-    if (string.IsNullOrEmpty(userId))
+    // PUT: Update points by user ID
+    [Authorize]
+    [HttpPut("{userId:length(24)}/updatePoints")]
+    public async Task<IActionResult> UpdatePoints(string userId, [FromBody] UpdatePointsRequest requestBody)
     {
-        return BadRequest("User ID is required.");
+        if (!ObjectId.TryParse(userId, out var objectId))
+            return BadRequest("Invalid user ID format.");
+
+        var pointsUpdate = requestBody?.PointsUpdate;
+
+        if (pointsUpdate == null)
+            return BadRequest("PointsUpdate is required.");
+
+        var update = Builders<User>.Update
+            .Inc(u => u.YellowPoints, pointsUpdate.YellowPoints)
+            .Inc(u => u.SilverPoints, pointsUpdate.SilverPoints)
+            .Inc(u => u.GoldPoints, pointsUpdate.GoldPoints)
+            .Inc(u => u.SuccessfulAttempts, pointsUpdate.SuccessfulAttempts);
+
+        var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
+
+        if (result.MatchedCount == 0)
+            return NotFound("User not found.");
+
+        return Ok("Points updated successfully.");
     }
-
-    // Parse userId as ObjectId
-    ObjectId objectId;
-    try
-    {
-        objectId = ObjectId.Parse(userId);
-    }
-    catch (FormatException)
-    {
-        return BadRequest("Invalid user ID format.");
-    }
-
-    var update = Builders<User>.Update
-        .Inc(u => u.YellowPoints, pointsUpdate.YellowPoints)
-        .Inc(u => u.SilverPoints, pointsUpdate.SilverPoints)
-        .Inc(u => u.GoldPoints, pointsUpdate.GoldPoints)
-        .Inc(u => u.SuccessfulAttempts, pointsUpdate.SuccessfulAttempts);
-
-    var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
-
-    if (result.MatchedCount == 0)
-        return NotFound("User not found.");
-
-    return Ok("Points updated successfully.");
-}
-
 
     // DELETE: Delete user account by user ID
     [Authorize]
-    [HttpDelete("{userId}")]
+    [HttpDelete("{userId:length(24)}")]
     public async Task<IActionResult> DeleteUser(string userId)
     {
-        if (string.IsNullOrEmpty(userId))
-        {
-            return BadRequest("User ID is required.");
-        }
-
-        // Convert userId to ObjectId
-        ObjectId objectId;
-        try
-        {
-            objectId = ObjectId.Parse(userId);
-        }
-        catch
-        {
+        if (!ObjectId.TryParse(userId, out var objectId))
             return BadRequest("Invalid user ID format.");
-        }
 
         var result = await _users.DeleteOneAsync(u => u.Id == objectId.ToString());
 

@@ -64,20 +64,63 @@ const GamePage = ({ route, navigation }) => {
         console.error("User ID is missing");
         return;
       }
-
-      console.log('Updating points with pointType:', pointType);  // Log point type
+  
+      // You should fetch user details (username, email, passwordHash) based on userId
+      // This is an example assuming you have a way to fetch the user data
+      const user = await getUserDetails(userId);
+  
+      const pointsUpdate = {
+        YellowPoints: 0,
+        SilverPoints: 0,
+        GoldPoints: 0,
+        SuccessfulAttempts: 1,
+      };
+  
+      // Set points based on the pointType
+      if (pointType === "YellowPoints") {
+        pointsUpdate.YellowPoints = 10; // Example value
+      } else if (pointType === "SilverPoints") {
+        pointsUpdate.SilverPoints = 5; // Example value
+      } else if (pointType === "GoldPoints") {
+        pointsUpdate.GoldPoints = 2; // Example value
+      }
+  
+      // Prepare the payload
+      const payload = {
+        username: user.username,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        pointsUpdate,
+      };
+  
+      console.log('Updating points with payload:', payload);
+  
       const response = await axios.put(
         `http://192.168.58.70:5000/api/user/${userId}/updatePoints`,
-        { [pointType]: 1, SuccessfulAttempts: 1 },  // Dynamic point update
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Points updated:", response.data);  // Log response after updating points
+  
+      console.log("Points updated successfully:", response.data);
     } catch (error) {
-      console.error("Failed to update points:", error);  // Log error if point update fails
+      console.error("Failed to update points:", error.response ? error.response.data : error.message);
     }
   };
+  
+  // Example function to fetch user details (username, email, passwordHash)
+  const getUserDetails = async (userId) => {
+    // Assuming you have an API to fetch the user details using userId
+    try {
+      const response = await axios.get(`http://192.168.58.70:5000/api/user/${userId}`);
+      return response.data; // Returning user data
+    } catch (error) {
+      console.error("Failed to fetch user details:", error.response ? error.response.data : error.message);
+      return {};
+    }
+  };
+  
 
   const handleAnswerSubmit = () => {
     console.log('User answer submitted:', userAnswer);  // Log the user answer
@@ -245,38 +288,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#6200ee',
     padding: 10,
     borderRadius: 5,
-    marginBottom: 20,
     alignItems: 'center',
+    marginBottom: 15,
   },
   darkButton: {
-    backgroundColor: '#444444',
+    backgroundColor: '#bb86fc',
   },
   buttonText: {
-    color: '#ffffff',
+    color: 'white',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   modalContent: {
+    backgroundColor: '#fff',
     padding: 20,
-    backgroundColor: '#ffffff',
     borderRadius: 10,
-    width: 250,
     alignItems: 'center',
   },
   modalText: {
-    fontSize: 18,
+    fontSize: 20,
     marginBottom: 15,
+    color: '#333',
   },
   modalCloseButton: {
+    fontSize: 16,
     color: '#6200ee',
-    fontSize: 18,
-    fontWeight: '600',
   },
 });
 

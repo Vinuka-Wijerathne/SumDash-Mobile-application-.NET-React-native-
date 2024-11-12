@@ -74,7 +74,50 @@ const ProfilePage = () => {
       }
     }
   };
-  
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "Are you sure?",
+      "This action will permanently delete your account. You cannot undo this.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const token = await AsyncStorage.getItem('token');
+              const userId = await AsyncStorage.getItem('userId');
+
+              if (!token || !userId) {
+                Alert.alert('No authentication token or user ID found');
+                return;
+              }
+
+              // Send the delete request to the backend
+              await axios.delete(`http://192.168.58.70:5000/api/user/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+
+              // Clear the user data from AsyncStorage
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('userId');
+
+              // Log out the user and navigate to the login screen or home
+              Alert.alert('Account Deleted', 'Your account has been successfully deleted.');
+              // Navigate to login screen or home here
+            } catch (error) {
+              console.error("Failed to delete account:", error);
+              Alert.alert('Error', 'Failed to delete the account. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   if (loading) {
     return (
@@ -124,6 +167,7 @@ const ProfilePage = () => {
         </View>
       </View>
 
+      <Button title="Delete Account" onPress={handleDeleteAccount} color="red" />
       <Footer />
     </View>
   );
