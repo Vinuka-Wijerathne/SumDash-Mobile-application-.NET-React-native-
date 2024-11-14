@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import Config from 'react-native-config';
 
 const LoginPage = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,7 @@ const LoginPage = ({ navigation }) => {
   
     setLoading(true);
     try {
-      const response = await axios.post('http://192.168.58.70:5000/api/Auth/login', {
+      const response = await axios.post('http://192.168.164.70:5000/api/Auth/login', {
         email,
         passwordHash: password,
       });

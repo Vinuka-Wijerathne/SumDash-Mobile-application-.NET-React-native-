@@ -37,7 +37,7 @@ const DashboardPage = ({ navigation }) => {
         }
 
         // Fetch user data with token and userId
-        const response = await axios.get(`http://192.168.58.70:5000/api/User/${userId}`, {
+        const response = await axios.get(`http://192.168.164.70:5000/api/User/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

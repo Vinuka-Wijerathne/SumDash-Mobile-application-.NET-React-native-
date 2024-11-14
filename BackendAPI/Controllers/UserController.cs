@@ -50,26 +50,26 @@ public class UserController : ControllerBase
         });
     }
 
-    // PUT: Update username, password, or profile picture by user ID
-    [Authorize]
-    [HttpPut("{userId:length(24)}/updateProfile")]
-    public async Task<IActionResult> UpdateProfile(string userId, [FromBody] User userProfileUpdate)
-    {
-        if (!ObjectId.TryParse(userId, out var objectId))
-            return BadRequest("Invalid user ID format.");
+   [Authorize]
+[HttpPut("{userId:length(24)}/updateProfile")]
+public async Task<IActionResult> UpdateProfile(string userId, [FromBody] User userProfileUpdate)
+{
+    if (!ObjectId.TryParse(userId, out var objectId))
+        return BadRequest("Invalid user ID format.");
 
-        var update = Builders<User>.Update
-            .Set(u => u.Username, userProfileUpdate.Username)
-            .Set(u => u.PasswordHash, userProfileUpdate.PasswordHash)
-            .Set(u => u.ProfilePictureUrl, userProfileUpdate.ProfilePictureUrl);
+    var update = Builders<User>.Update
+        .Set(u => u.Username, userProfileUpdate.Username)
+        .Set(u => u.PasswordHash, userProfileUpdate.PasswordHash)
+        .Set(u => u.ProfilePictureUrl, userProfileUpdate.ProfilePictureUrl);
 
-        var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
+    var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
 
-        if (result.MatchedCount == 0)
-            return NotFound("User not found.");
+    if (result.MatchedCount == 0)
+        return NotFound("User not found.");
 
-        return Ok("Profile updated successfully.");
-    }
+    return Ok("Profile updated successfully.");
+}
+
 
     // PUT: Update points by user ID
     [Authorize]

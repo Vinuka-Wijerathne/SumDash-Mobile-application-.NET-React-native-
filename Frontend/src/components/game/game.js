@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, I
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../../ThemeContext';
+import * as Progress from 'react-native-progress';
 
 const GamePage = ({ route, navigation }) => {
   const { timeLimit } = route.params;
@@ -15,7 +16,7 @@ const GamePage = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [animationValue] = useState(new Animated.Value(0));
-  const [isAnswerIncorrect, setIsAnswerIncorrect] = useState(false);  // Track if the answer is incorrect
+  const [isAnswerIncorrect, setIsAnswerIncorrect] = useState(false);
 
   useEffect(() => {
     fetchQuestion();
@@ -32,7 +33,7 @@ const GamePage = ({ route, navigation }) => {
 
   const getToken = async () => {
     const token = await AsyncStorage.getItem('token');
-    console.log('Token:', token);  // Log the token value
+    console.log('Token:', token);
     return token;
   };
 
@@ -40,20 +41,20 @@ const GamePage = ({ route, navigation }) => {
     try {
       console.log('Fetching question...');
       const response = await axios.get('https://marcconrad.com/uob/banana/api.php');
-      console.log('Question fetched:', response.data);  // Log the fetched question data
+      console.log('Question fetched:', response.data);
       setQuestionImage(response.data.question);
       setSolution(response.data.solution);
       setUserAnswer('');
-      setIsAnswerIncorrect(false);  // Reset incorrect answer state when a new question is fetched
+      setIsAnswerIncorrect(false);
     } catch (error) {
-      console.error('Error fetching question:', error);  // Log the error
+      console.error('Error fetching question:', error);
     }
   };
 
   const getUserId = async () => {
     const userId = await AsyncStorage.getItem('userId');
-    console.log('User ID:', userId);  // Log the user ID
-    return userId;  // Ensure userId is saved in AsyncStorage
+    console.log('User ID:', userId);
+    return userId;
   };
 
   const updatePoints = async (pointType) => {
@@ -64,89 +65,65 @@ const GamePage = ({ route, navigation }) => {
         console.error("User ID is missing");
         return;
       }
-  
-      // You should fetch user details (username, email, passwordHash) based on userId
-      // This is an example assuming you have a way to fetch the user data
-      const user = await getUserDetails(userId);
-  
+
       const pointsUpdate = {
         YellowPoints: 0,
         SilverPoints: 0,
         GoldPoints: 0,
         SuccessfulAttempts: 1,
       };
-  
-      // Set points based on the pointType
+
       if (pointType === "YellowPoints") {
-        pointsUpdate.YellowPoints = 10; // Example value
+        pointsUpdate.YellowPoints = 1;
       } else if (pointType === "SilverPoints") {
-        pointsUpdate.SilverPoints = 5; // Example value
+        pointsUpdate.SilverPoints = 1;
       } else if (pointType === "GoldPoints") {
-        pointsUpdate.GoldPoints = 2; // Example value
+        pointsUpdate.GoldPoints = 1;
       }
-  
-      // Prepare the payload
+
       const payload = {
-        username: user.username,
-        email: user.email,
-        passwordHash: user.passwordHash,
         pointsUpdate,
       };
-  
+
       console.log('Updating points with payload:', payload);
-  
+
       const response = await axios.put(
-        `http://192.168.58.70:5000/api/user/${userId}/updatePoints`,
+        `http://192.168.164.70:5000/api/user/${userId}/updatePoints`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       console.log("Points updated successfully:", response.data);
     } catch (error) {
       console.error("Failed to update points:", error.response ? error.response.data : error.message);
     }
   };
-  
-  // Example function to fetch user details (username, email, passwordHash)
-  const getUserDetails = async (userId) => {
-    // Assuming you have an API to fetch the user details using userId
-    try {
-      const response = await axios.get(`http://192.168.58.70:5000/api/user/${userId}`);
-      return response.data; // Returning user data
-    } catch (error) {
-      console.error("Failed to fetch user details:", error.response ? error.response.data : error.message);
-      return {};
-    }
-  };
-  
 
   const handleAnswerSubmit = () => {
-    console.log('User answer submitted:', userAnswer);  // Log the user answer
+    console.log('User answer submitted:', userAnswer);
     if (parseInt(userAnswer) === solution) {
-      console.log('Correct answer!');  // Log correct answer
+      console.log('Correct answer!');
       setScore(score + 1);
       setTimeLeft(timeLimit);
       showFeedback('Correct Answer!', false);
       fetchQuestion();
 
-      // Determine point type based on selected level
-      const pointType =
-        timeLimit === 60 ? "YellowPoints" :
-        timeLimit === 45 ? "SilverPoints" : "GoldPoints";
+      const pointType = timeLimit === 60 ? "YellowPoints" :
+                        timeLimit === 45 ? "SilverPoints" : "GoldPoints";
 
-      updatePoints(pointType);  // Pass the point type for scoring
+      updatePoints(pointType);
     } else {
-      console.log('Incorrect answer.');  // Log incorrect answer
+      console.log('Incorrect answer.');
       showFeedback(`Incorrect Answer! The correct answer is ${solution}`, true);
-      setIsAnswerIncorrect(true);  // Mark the answer as incorrect
+      setIsAnswerIncorrect(true);
     }
     setUserAnswer('');
   };
 
   const showFeedback = (message, isError) => {
-    console.log('Feedback message:', message);  // Log the feedback message
+    console.log('Feedback message:', message);
     setFeedbackMessage(message);
     setModalVisible(true);
     Animated.timing(animationValue, {
@@ -165,21 +142,32 @@ const GamePage = ({ route, navigation }) => {
     opacity: animationValue,
   };
 
-  const handleTryAgain = () => {
-    fetchQuestion();  // Load a new question when user clicks "Try Again"
-  };
-
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Image source={require('../../../assets/back.png')} style={styles.backButtonImage} />
         <Text style={[styles.backButtonText, isDarkMode && styles.darkButtonText, fontStyle]}>Back</Text>
       </TouchableOpacity>
+
+      <View style={styles.scoreboard}>
+        <Text style={[styles.scoreText, isDarkMode && styles.darkText, fontStyle]}>Score: {score}</Text>
+      </View>
       
-      <Text style={[styles.timer, isDarkMode && styles.darkText, fontStyle]}>Time Left: {timeLeft}s</Text>
-      <Text style={[styles.score, isDarkMode && styles.darkText, fontStyle]}>Score: {score}</Text>
-      
-      {/* Display the question image */}
+      <View style={styles.timerContainer}>
+        <Progress.Circle
+          size={100}
+          progress={timeLeft / timeLimit}
+          showsText={true}
+          formatText={() => timeLeft.toString()}
+          color="#ff4444"
+          thickness={8}
+          textStyle={{ fontSize: 24, color: isDarkMode ? '#ffff00' : '#ff4444' }}
+          borderWidth={2}
+          borderColor={isDarkMode ? '#ffffff' : '#000000'}
+          unfilledColor={isDarkMode ? '#555555' : '#eeeeee'}
+        />
+      </View>
+
       <Image source={{ uri: questionImage }} style={styles.questionImage} />
 
       <TextInput
@@ -189,28 +177,19 @@ const GamePage = ({ route, navigation }) => {
         value={userAnswer}
         onChangeText={setUserAnswer}
         placeholderTextColor={isDarkMode ? '#bbbbbb' : '#888888'}
-        editable={!isAnswerIncorrect}  // Disable input if the answer is incorrect
+        editable={!isAnswerIncorrect}
       />
+      
       <TouchableOpacity 
         style={[styles.button, isDarkMode && styles.darkButton]} 
         onPress={handleAnswerSubmit} 
-        disabled={isAnswerIncorrect}  // Disable button if the answer is incorrect
+        disabled={isAnswerIncorrect}
       >
         <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>
           Submit
         </Text>
       </TouchableOpacity>
 
-      {/* Try Again Button */}
-      {isAnswerIncorrect && (
-        <TouchableOpacity style={[styles.button, isDarkMode && styles.darkButton]} onPress={handleTryAgain}>
-          <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>
-            Try Again
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Feedback Modal */}
       <Modal transparent={true} animationType="fade" visible={modalVisible}>
         <View style={[styles.modalContainer, isDarkMode && styles.darkContainer]}>
           <Animated.View style={[styles.modalContent, feedbackStyle]}>
@@ -238,7 +217,7 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 150,
+    marginBottom: 20,
   },
   backButtonImage: {
     width: 24,
@@ -253,68 +232,71 @@ const styles = StyleSheet.create({
   darkButtonText: {
     color: '#ffff00',
   },
-  timer: {
+  scoreboard: {
+    alignItems: 'center',
+    backgroundColor: '#eeeeee',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 20,
+    width: '100%',
+  },
+  scoreText: {
     fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 15,
-    color: '#ff4444',
     fontWeight: '700',
   },
-  score: {
-    fontSize: 24,
-    textAlign: 'center',
-    marginBottom: 25,
-    color: '#4CAF50',
-    fontWeight: '700',
+  timerContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
   questionImage: {
     width: '100%',
     height: 200,
     marginBottom: 20,
+    borderRadius: 10,
   },
   input: {
     height: 40,
-    borderColor: '#6200ee',
-    borderWidth: 2,
-    borderRadius: 5,
-    marginBottom: 15,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
     paddingLeft: 10,
+    marginBottom: 20,
   },
   darkInput: {
     backgroundColor: '#333333',
+    borderColor: '#555555',
     color: '#ffffff',
   },
   button: {
     backgroundColor: '#6200ee',
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 15,
   },
   darkButton: {
-    backgroundColor: '#bb86fc',
+    backgroundColor: '#3030cc',
   },
   buttonText: {
-    color: 'white',
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
   },
   modalText: {
-    fontSize: 20,
-    marginBottom: 15,
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 20,
   },
   modalCloseButton: {
     fontSize: 16,

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import axios from 'axios'; // Import Axios
 import Lottie from 'lottie-react-native'; // Import Lottie
-import { API_URL } from '@env';
+
 const SignUpPage = ({ navigation }) => { // Receive navigation prop
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -11,7 +11,7 @@ const SignUpPage = ({ navigation }) => { // Receive navigation prop
   const handleSignUp = async () => {
     if (name && email && password) {
       try {
-        const response = await axios.post('http://192.168.58.70:5000/api/Auth/signup', {
+        const response = await axios.post('http://192.168.164.70:5000/api/Auth/signup', {
           Username: name,
           Email: email,
           PasswordHash: password,  

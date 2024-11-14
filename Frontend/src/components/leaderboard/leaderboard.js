@@ -4,6 +4,7 @@ import axios from 'axios';
 import TopBar from '../topbar/topbar'; // Ensure TopBar is imported
 import Footer from '../footer/footer'; // Ensure Footer is imported
 import { useTheme } from '../../../ThemeContext'; // Ensure ThemeContext is imported
+import defaultProfileImage from '../../../assets/Profile.png';  // Adjust the path to your asset folder
 
 const LeaderboardPage = () => {
   const { isDarkMode, fontStyle } = useTheme(); // Retrieve both isDarkMode and fontStyle from the theme context
@@ -13,7 +14,7 @@ const LeaderboardPage = () => {
 
   useEffect(() => {
     // Fetch users data from backend
-    axios.get('http://192.168.58.70:5000/api/User/all')
+    axios.get('http://192.168.164.70:5000/api/User/all')
       .then(response => {
         console.log('Users Data:', response.data);
         setUsers(response.data);
@@ -41,19 +42,46 @@ const LeaderboardPage = () => {
 
   const renderLeaderboardItem = ({ item }) => {
     console.log('Rendering Item:', item); // Log to verify the item being rendered
+    let points = 0; // Default to 0 points
+    let leagueName = '';
+
+    // Determine which points to show based on the selected league
+    if (selectedLeague === 'yellow') {
+      points = item.yellowPoints;
+      leagueName = 'Yellow Rank';
+    } else if (selectedLeague === 'silver') {
+      points = item.silverPoints;
+      leagueName = 'Silver Rank';
+    } else if (selectedLeague === 'gold') {
+      points = item.goldPoints;
+      leagueName = 'Gold Rank';
+    } else {
+      // For 'all' league, display based on the highest points in each category
+      points = Math.max(item.yellowPoints, item.silverPoints, item.goldPoints);
+      leagueName = item.yellowPoints > 0
+        ? 'Yellow Rank'
+        : item.silverPoints > 0
+        ? 'Silver Rank'
+        : 'Gold Rank';
+    }
+
     return (
       <View style={[styles.leaderboardItem, isDarkMode && styles.darkLeaderboardItem]}>
-        <Image source={{ uri: item.profilePictureUrl || 'https://via.placeholder.com/50' }} style={styles.avatar} />
+       <Image
+  source={item.profilePictureUrl ? { uri: item.profilePictureUrl } : defaultProfileImage}
+  style={{ width: 50, height: 50, borderRadius: 25 }}  // Adjust the style as needed
+/>
+
         <View style={styles.textContainer}>
           <Text style={[styles.username, isDarkMode && styles.darkUsername, fontStyle && { fontFamily: fontStyle }]}>
             {item.username}
           </Text>
           <Text style={[styles.rank, isDarkMode && styles.darkRank, fontStyle && { fontFamily: fontStyle }]}>
-            {item.yellowPoints > 0 ? 'Yellow Rank' : item.silverPoints > 0 ? 'Silver Rank' : 'Gold Rank'}
+            {leagueName}
           </Text>
         </View>
         <Text style={[styles.score, isDarkMode && styles.darkScore, fontStyle && { fontFamily: fontStyle }]}>
-          {item.yellowPoints > 0 ? item.yellowPoints : item.silverPoints > 0 ? item.silverPoints : item.goldPoints}
+          {points}
         </Text>
       </View>
     );
@@ -97,7 +125,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   darkContainer: {
-    marginTop: 10,
+    marginTop: 0,
     backgroundColor: '#222222',
   },
   filterContainer: {
