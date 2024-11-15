@@ -10,7 +10,7 @@ const LeaderboardPage = () => {
   const { isDarkMode, fontStyle } = useTheme(); // Retrieve both isDarkMode and fontStyle from the theme context
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [selectedLeague, setSelectedLeague] = useState('all'); // Default is 'all' to show all users
+  const [selectedLeague, setSelectedLeague] = useState('yellow'); // Default to 'yellow' league
 
   useEffect(() => {
     // Fetch users data from backend
@@ -18,7 +18,7 @@ const LeaderboardPage = () => {
       .then(response => {
         console.log('Users Data:', response.data);
         setUsers(response.data);
-        setFilteredUsers(response.data); // Initially, show all users
+        setFilteredUsers(response.data.filter(user => user.yellowPoints > 0)); // Filter by yellow league by default
       })
       .catch(error => {
         console.error('Error fetching users:', error);
@@ -41,7 +41,6 @@ const LeaderboardPage = () => {
   };
 
   const renderLeaderboardItem = ({ item }) => {
-    console.log('Rendering Item:', item); // Log to verify the item being rendered
     let points = 0; // Default to 0 points
     let leagueName = '';
 
@@ -55,23 +54,14 @@ const LeaderboardPage = () => {
     } else if (selectedLeague === 'gold') {
       points = item.goldPoints;
       leagueName = 'Gold Rank';
-    } else {
-      // For 'all' league, display based on the highest points in each category
-      points = Math.max(item.yellowPoints, item.silverPoints, item.goldPoints);
-      leagueName = item.yellowPoints > 0
-        ? 'Yellow Rank'
-        : item.silverPoints > 0
-        ? 'Silver Rank'
-        : 'Gold Rank';
     }
 
     return (
       <View style={[styles.leaderboardItem, isDarkMode && styles.darkLeaderboardItem]}>
-       <Image
-  source={item.profilePictureUrl ? { uri: item.profilePictureUrl } : defaultProfileImage}
-  style={{ width: 50, height: 50, borderRadius: 25 }}  // Adjust the style as needed
-/>
-
+        <Image
+          source={item.profilePictureUrl ? { uri: item.profilePictureUrl } : defaultProfileImage}
+          style={styles.avatar}
+        />
         <View style={styles.textContainer}>
           <Text style={[styles.username, isDarkMode && styles.darkUsername, fontStyle && { fontFamily: fontStyle }]}>
             {item.username}
@@ -93,15 +83,15 @@ const LeaderboardPage = () => {
       <TopBar title="Leaderboard" />
 
       {/* Filter Dropdowns */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity style={styles.filterButton} onPress={() => filterByLeague('yellow')}>
-          <Text style={[styles.filterText, fontStyle && { fontFamily: fontStyle }]}>Yellow ▼</Text>
+      <View style={[styles.filterContainer, isDarkMode && styles.darkFilterContainer]}>
+        <TouchableOpacity style={[styles.filterButton, isDarkMode && styles.darkFilterButton]} onPress={() => filterByLeague('yellow')}>
+          <Text style={[styles.filterText, isDarkMode && styles.darkFilterText, fontStyle && { fontFamily: fontStyle }]}>Yellow ▼</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton} onPress={() => filterByLeague('silver')}>
-          <Text style={[styles.filterText, fontStyle && { fontFamily: fontStyle }]}>Silver ▼</Text>
+        <TouchableOpacity style={[styles.filterButton, isDarkMode && styles.darkFilterButton]} onPress={() => filterByLeague('silver')}>
+          <Text style={[styles.filterText, isDarkMode && styles.darkFilterText, fontStyle && { fontFamily: fontStyle }]}>Silver ▼</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.filterButton} onPress={() => filterByLeague('gold')}>
-          <Text style={[styles.filterText, fontStyle && { fontFamily: fontStyle }]}>Gold ▼</Text>
+        <TouchableOpacity style={[styles.filterButton, isDarkMode && styles.darkFilterButton]} onPress={() => filterByLeague('gold')}>
+          <Text style={[styles.filterText, isDarkMode && styles.darkFilterText, fontStyle && { fontFamily: fontStyle }]}>Gold ▼</Text>
         </TouchableOpacity>
       </View>
 
@@ -125,15 +115,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   darkContainer: {
-    marginTop: 0,
     backgroundColor: '#222222',
   },
   filterContainer: {
-    marginTop: 100,
+    marginTop: 120, // Ensure it's not hidden behind the TopBar
     flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f9f9f9', // Light mode background
+  },
+  darkFilterContainer: {
+    backgroundColor: '#333333', // Dark mode background
   },
   filterButton: {
     backgroundColor: '#e0e0e0',
@@ -142,9 +134,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginHorizontal: 5,
   },
+  darkFilterButton: {
+    backgroundColor: '#555555', // Dark mode button background
+  },
   filterText: {
     color: '#333',
     fontSize: 14,
+  },
+  darkFilterText: {
+    color: '#fff', // Text color in dark mode should be white
   },
   listContainer: {
     marginTop: 20,

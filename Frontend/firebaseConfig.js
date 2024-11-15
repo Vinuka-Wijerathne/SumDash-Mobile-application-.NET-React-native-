@@ -1,31 +1,25 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
 import { getStorage } from "firebase/storage";
-import Config from 'react-native-config';
 
-// Your Firebase configuration using environment variables from `react-native-config`
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: Config.FIREBASE_API_KEY,
-  authDomain: Config.FIREBASE_AUTH_DOMAIN,
-  projectId: Config.FIREBASE_PROJECT_ID,
-  storageBucket: Config.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: Config.FIREBASE_MESSAGING_SENDER_ID,
-  appId: Config.FIREBASE_APP_ID,
-  measurementId: Config.FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyAQNk1QJlApjcaSUBDPpODQWb-ei5teAkM",
+  authDomain: "headquarters-e1285.firebaseapp.com",
+  projectId: "headquarters-e1285",
+  storageBucket: "headquarters-e1285.appspot.com", // Ensure this is correct
+  messagingSenderId: "647570623295",
+  appId: "1:647570623295:web:6032f81450bbc853f9218a",
+  measurementId: "G-LR8GC6NE10"
 };
+
+// Log the configuration for debugging
+console.log("Firebase Config:", firebaseConfig);
 
 // Initialize Firebase only if it hasn't been initialized yet
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+console.log("Firebase App Initialized:", app);
 
-// Conditionally initialize Firebase Analytics
-isSupported().then((supported) => {
-  if (supported) {
-    const analytics = getAnalytics(app);
-  } else {
-    console.log("Analytics is not supported in this environment.");
-  }
-});
-
-// Export the app and storage to be used elsewhere
-export const storage = getStorage(app);
+// Initialize Firebase Storage
+const storage = getStorage(app);
+export { storage };
 export default app;

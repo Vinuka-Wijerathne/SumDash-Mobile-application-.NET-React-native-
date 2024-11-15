@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, Animated, Image } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../../ThemeContext';
 import * as Progress from 'react-native-progress';
+import LottieView from 'lottie-react-native';
 
 const GamePage = ({ route, navigation }) => {
   const { timeLimit } = route.params;
@@ -12,16 +14,19 @@ const GamePage = ({ route, navigation }) => {
   const [solution, setSolution] = useState(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
-  const [modalVisible, setModalVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [animationValue] = useState(new Animated.Value(0));
   const [isAnswerIncorrect, setIsAnswerIncorrect] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+  const timerRef = React.useRef(null);
+  const successOpacity = useState(new Animated.Value(0))[0]; // Opacity for smooth transition
 
   useEffect(() => {
     fetchQuestion();
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearInterval(timer);
+    startTimer();
+    return () => clearInterval(timerRef.current);
   }, []);
 
   useEffect(() => {
@@ -31,180 +36,180 @@ const GamePage = ({ route, navigation }) => {
     }
   }, [timeLeft]);
 
-  const getToken = async () => {
-    const token = await AsyncStorage.getItem('token');
-    console.log('Token:', token);
-    return token;
+  const startTimer = () => {
+    timerRef.current = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
   };
+
+  const pauseTimer = () => {
+    clearInterval(timerRef.current);
+  };
+
+  const resetTimer = () => {
+    setTimeLeft(timeLimit);
+    startTimer();
+  };
+
+  const getToken = async () => await AsyncStorage.getItem('token');
 
   const fetchQuestion = async () => {
     try {
-      console.log('Fetching question...');
       const response = await axios.get('https://marcconrad.com/uob/banana/api.php');
       console.log('Question fetched:', response.data);
       setQuestionImage(response.data.question);
       setSolution(response.data.solution);
       setUserAnswer('');
       setIsAnswerIncorrect(false);
+      setFeedbackMessage('');
+      setIsSubmitDisabled(false);
     } catch (error) {
       console.error('Error fetching question:', error);
     }
   };
 
-  const getUserId = async () => {
-    const userId = await AsyncStorage.getItem('userId');
-    console.log('User ID:', userId);
-    return userId;
-  };
-
   const updatePoints = async (pointType) => {
     try {
       const token = await getToken();
-      const userId = await getUserId();
-      if (!userId) {
-        console.error("User ID is missing");
-        return;
-      }
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
 
       const pointsUpdate = {
-        YellowPoints: 0,
-        SilverPoints: 0,
-        GoldPoints: 0,
+        YellowPoints: pointType === 'YellowPoints' ? 1 : 0,
+        SilverPoints: pointType === 'SilverPoints' ? 1 : 0,
+        GoldPoints: pointType === 'GoldPoints' ? 1 : 0,
         SuccessfulAttempts: 1,
       };
 
-      if (pointType === "YellowPoints") {
-        pointsUpdate.YellowPoints = 1;
-      } else if (pointType === "SilverPoints") {
-        pointsUpdate.SilverPoints = 1;
-      } else if (pointType === "GoldPoints") {
-        pointsUpdate.GoldPoints = 1;
-      }
-
-      const payload = {
-        pointsUpdate,
-      };
-
-      console.log('Updating points with payload:', payload);
-
-      const response = await axios.put(
+      await axios.put(
         `http://192.168.164.70:5000/api/user/${userId}/updatePoints`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { pointsUpdate },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      console.log("Points updated successfully:", response.data);
     } catch (error) {
-      console.error("Failed to update points:", error.response ? error.response.data : error.message);
+      console.error("Failed to update points:", error.response?.data || error.message);
     }
   };
 
   const handleAnswerSubmit = () => {
-    console.log('User answer submitted:', userAnswer);
     if (parseInt(userAnswer) === solution) {
-      console.log('Correct answer!');
       setScore(score + 1);
-      setTimeLeft(timeLimit);
-      showFeedback('Correct Answer!', false);
-      fetchQuestion();
+      setStreak(streak + 1);
+      setShowSuccessAnimation(true);
+      pauseTimer();
 
-      const pointType = timeLimit === 60 ? "YellowPoints" :
-                        timeLimit === 45 ? "SilverPoints" : "GoldPoints";
+      // Show success animation and message, then load new question after 2 seconds
+      setTimeout(() => {
+        setShowSuccessAnimation(false);
+        fetchQuestion();
+        resetTimer();
+      }, 2000);
 
+      const pointType = timeLimit === 60 ? "YellowPoints" : timeLimit === 45 ? "SilverPoints" : "GoldPoints";
       updatePoints(pointType);
     } else {
-      console.log('Incorrect answer.');
-      showFeedback(`Incorrect Answer! The correct answer is ${solution}`, true);
+      setFeedbackMessage(`Incorrect! Correct answer: ${solution}`);
+      setStreak(0);
       setIsAnswerIncorrect(true);
+      setIsSubmitDisabled(true);
+      pauseTimer();
     }
     setUserAnswer('');
   };
 
-  const showFeedback = (message, isError) => {
-    console.log('Feedback message:', message);
-    setFeedbackMessage(message);
-    setModalVisible(true);
-    Animated.timing(animationValue, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        setModalVisible(false);
-        animationValue.setValue(0);
-      }, 1000);
-    });
+  const handleTryAgain = () => {
+    fetchQuestion();
+    resetTimer();
   };
 
-  const feedbackStyle = {
-    opacity: animationValue,
+  const showFeedback = (message) => {
+    setFeedbackMessage(message);
   };
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Image source={require('../../../assets/back.png')} style={styles.backButtonImage} />
+        <Icon name="arrow-back" size={24} color={isDarkMode ? '#ffffff' : '#000000'} style={styles.backButtonIcon} />
         <Text style={[styles.backButtonText, isDarkMode && styles.darkButtonText, fontStyle]}>Back</Text>
       </TouchableOpacity>
 
-      <View style={styles.scoreboard}>
-        <Text style={[styles.scoreText, isDarkMode && styles.darkText, fontStyle]}>Score: {score}</Text>
-      </View>
-      
-      <View style={styles.timerContainer}>
-        <Progress.Circle
-          size={100}
-          progress={timeLeft / timeLimit}
-          showsText={true}
-          formatText={() => timeLeft.toString()}
-          color="#ff4444"
-          thickness={8}
-          textStyle={{ fontSize: 24, color: isDarkMode ? '#ffff00' : '#ff4444' }}
-          borderWidth={2}
-          borderColor={isDarkMode ? '#ffffff' : '#000000'}
-          unfilledColor={isDarkMode ? '#555555' : '#eeeeee'}
-        />
-      </View>
-
-      <Image source={{ uri: questionImage }} style={styles.questionImage} />
-
-      <TextInput
-        style={[styles.input, isDarkMode && styles.darkInput, fontStyle]}
-        placeholder="Enter your answer"
-        keyboardType="numeric"
-        value={userAnswer}
-        onChangeText={setUserAnswer}
-        placeholderTextColor={isDarkMode ? '#bbbbbb' : '#888888'}
-        editable={!isAnswerIncorrect}
-      />
-      
-      <TouchableOpacity 
-        style={[styles.button, isDarkMode && styles.darkButton]} 
-        onPress={handleAnswerSubmit} 
-        disabled={isAnswerIncorrect}
-      >
-        <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>
-          Submit
-        </Text>
-      </TouchableOpacity>
-
-      <Modal transparent={true} animationType="fade" visible={modalVisible}>
-        <View style={[styles.modalContainer, isDarkMode && styles.darkContainer]}>
-          <Animated.View style={[styles.modalContent, feedbackStyle]}>
-            <Text style={[styles.modalText, isDarkMode && styles.darkText, fontStyle]}>{feedbackMessage}</Text>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text style={[styles.modalCloseButton, isDarkMode && styles.darkButtonText, fontStyle]}>Close</Text>
-            </TouchableOpacity>
-          </Animated.View>
+      {showSuccessAnimation ? (
+        <View style={styles.successAnimationContainer}>
+          <LottieView source={require('../../../assets/success.json')} autoPlay loop={false} style={styles.lottieAnimation} />
+          <Text style={styles.successText}>Your answer was correct!</Text>
         </View>
-      </Modal>
+      ) : (
+        <>
+          <View style={styles.scoreboard}>
+            <Text style={[styles.scoreText, isDarkMode && styles.darkText, fontStyle]}>Score: {score}</Text>
+            <Text style={[styles.streakText, isDarkMode && styles.darkText, fontStyle]}>Streak: {streak}</Text>
+          </View>
+
+          {feedbackMessage && (
+            <View style={styles.feedbackMessage}>
+              <Text style={styles.feedbackText}>{feedbackMessage}</Text>
+            </View>
+          )}
+
+          <View style={styles.timerContainer}>
+            <Progress.Circle
+              size={100}
+              progress={timeLeft / timeLimit}
+              showsText={true}
+              formatText={() => timeLeft.toString()}
+              color="#ff4444"
+              thickness={8}
+              textStyle={{ fontSize: 24, color: isDarkMode ? '#ffff00' : '#ff4444' }}
+              borderWidth={2}
+              borderColor={isDarkMode ? '#ffffff' : '#000000'}
+              unfilledColor={isDarkMode ? '#555555' : '#eeeeee'}
+            />
+          </View>
+
+          <Image source={{ uri: questionImage }} style={styles.questionImage} />
+
+          <TextInput
+            style={[styles.input, isDarkMode && styles.darkInput, fontStyle]}
+            placeholder="Enter your answer"
+            keyboardType="numeric"
+            value={userAnswer}
+            onChangeText={setUserAnswer}
+            placeholderTextColor={isDarkMode ? '#bbbbbb' : '#888888'}
+            editable={!isSubmitDisabled}
+          />
+
+          <TouchableOpacity
+            style={[styles.button, isDarkMode && styles.darkButton]}
+            onPress={handleAnswerSubmit}
+            disabled={isSubmitDisabled}
+          >
+            <Text style={[styles.buttonText, isDarkMode && styles.darkButtonText, fontStyle]}>
+              Submit
+            </Text>
+          </TouchableOpacity>
+
+          {isAnswerIncorrect && (
+            <TouchableOpacity style={styles.tryAgainButton} onPress={handleTryAgain}>
+              <Text style={styles.tryAgainText}>Try Again</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  feedbackMessage: {
+    backgroundColor: '#ff4444',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  feedbackText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -302,6 +307,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6200ee',
   },
+  tryAgainButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#ff4444',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tryAgainText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fullScreenAnimation: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successText: {
+    fontSize: 24,
+    color: '#4caf50',
+    fontWeight: '700',
+    marginTop: 20,
+},
+backButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+ paddingBottom:100,
+},
+backButtonIcon: {
+  marginRight: 10,
+},
+backButtonText: {
+  color: '#6200ee',
+  fontSize: 18,
+  fontWeight: '600',
+},
+darkButtonText: {
+  color: '#ffff00',
+},
 });
 
 export default GamePage;

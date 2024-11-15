@@ -41,34 +41,72 @@ const ProfilePage = () => {
   }, []);
 
   const handleImageUpload = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      setError("Permission to access gallery is required!");
-      return;
-    }
+    try {
+      // Request permission to access the media library
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!granted) {
+        setError("Permission to access gallery is required!");
+        return;
+      }
   
-    const pickerResult = await ImagePicker.launchImageLibraryAsync();
-    if (!pickerResult.cancelled) {
-      const uri = pickerResult.uri;
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      
+      const uri = pickerResult.assets ? pickerResult.assets[0].uri : undefined;
+      console.log("Image URI:", uri);
+      
+  
+      // Exit if no image is selected
+      if (pickerResult.cancelled) return;
+  
+  
+      // Fetch the image as a blob
       const response = await fetch(uri);
+      if (!response.ok) throw new Error("Failed to fetch image.");
+  
       const blob = await response.blob();
   
+      // Reference to Firebase Storage
       const storageRef = ref(storage, `profile_pictures/${userData.userId}`);
-      try {
-        await uploadBytes(storageRef, blob);
-        const downloadURL = await getDownloadURL(storageRef);
-        
-        if (downloadURL) {
-          setUserData((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
-        } else {
-          setError("Image upload failed. Please try again.");
-        }
-      } catch (uploadError) {
-        setError("Image upload failed. Please try again.");
+      console.log("Uploading image to Firebase...");
+  
+      // Upload the image to Firebase Storage
+      await uploadBytes(storageRef, blob);
+  
+      // Retrieve the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log("Image uploaded to Firebase. Download URL:", downloadURL);
+  
+      // Update the user's profile picture URL in the backend
+      const token = await AsyncStorage.getItem("token");
+      const userId = userData.userId;
+  
+      if (!token || !userId) {
+        setError("No authentication token or user ID found");
+        return;
       }
+  
+      await axios.put(
+        `http://192.168.164.70:5000/api/user/${userId}/updateProfile`,
+        { profilePictureUrl: downloadURL },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      // Update the profile picture URL in the UI
+      setUserData((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
+  
+    } catch (error) {
+      setError("Image upload failed. Please try again.");
+      console.error("Image upload error:", error);
     }
   };
-
+  
+  
+  
   const handleDeleteAccount = async () => {
     Alert.alert(
       "Are you sure?",

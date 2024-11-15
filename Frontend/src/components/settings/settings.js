@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Share } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Ensure you have this installed
-import { useTheme } from '../../../ThemeContext'; // Ensure the path is correct
+import { Picker } from '@react-native-picker/picker';
+import { useTheme } from '../../../ThemeContext';
+import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsPage = ({ navigation }) => {
@@ -23,11 +24,7 @@ const SettingsPage = ({ navigation }) => {
         message: 'Join me in playing this amazing game! Check it out here: [Your Game Link]',
       });
       if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log('Shared with activity type: ' + result.activityType);
-        } else {
-          console.log('Shared');
-        }
+        console.log('Shared');
       } else if (result.action === Share.dismissedAction) {
         console.log('Dismissed');
       }
@@ -38,17 +35,9 @@ const SettingsPage = ({ navigation }) => {
 
   return (
     <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text
-          style={[
-            styles.backButtonText,
-            globalStyles.text,
-            isDarkMode ? styles.darkText : styles.lightText,
-            { fontFamily: fontStyle } // Apply fontStyle dynamically here
-          ]}
-        >
-          Back
-        </Text>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color={isDarkMode ? '#ffffff' : '#000000'} style={styles.backButtonIcon} />
+        <Text style={[styles.backButtonText, isDarkMode && styles.darkButtonText, fontStyle]}>Back</Text>
       </TouchableOpacity>
 
       <Text
@@ -56,7 +45,7 @@ const SettingsPage = ({ navigation }) => {
           styles.settingTitle,
           globalStyles.text,
           isDarkMode ? styles.darkText : styles.lightText,
-          { fontFamily: fontStyle } // Apply fontStyle dynamically here
+          { fontFamily: fontStyle }
         ]}
       >
         Settings
@@ -68,12 +57,12 @@ const SettingsPage = ({ navigation }) => {
             styles.settingText,
             globalStyles.text,
             isDarkMode ? styles.darkText : styles.lightText,
-            { fontFamily: fontStyle } // Apply fontStyle dynamically here
+            { fontFamily: fontStyle }
           ]}
         >
           Dark Mode
         </Text>
-        <Switch value={isDarkMode} onValueChange={toggleTheme} />
+        <Switch value={isDarkMode} onValueChange={toggleTheme} thumbColor="#4CAF50" />
       </View>
 
       <View style={styles.settingRow}>
@@ -82,7 +71,7 @@ const SettingsPage = ({ navigation }) => {
             styles.settingText,
             globalStyles.text,
             isDarkMode ? styles.darkText : styles.lightText,
-            { fontFamily: fontStyle } // Apply fontStyle dynamically here
+            { fontFamily: fontStyle }
           ]}
         >
           Font Style
@@ -90,12 +79,11 @@ const SettingsPage = ({ navigation }) => {
         <Picker
           selectedValue={fontStyle}
           onValueChange={(itemValue) => updateFontStyle(itemValue)}
-          style={[styles.picker, { fontFamily: fontStyle }]} // Apply fontStyle dynamically here as well
+          style={[styles.picker, { fontFamily: fontStyle }]}
         >
           <Picker.Item label="Roboto" value="Roboto" />
           <Picker.Item label="PlayFair" value="PlayFair" />
           <Picker.Item label="IBMPlexMono" value="IBMPlexMono" />
-          {/* Add more font options if needed */}
         </Picker>
       </View>
 
@@ -118,68 +106,83 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   darkContainer: {
-    backgroundColor: '#333',
+    backgroundColor: '#121212',
   },
   lightContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f7f8fa',
   },
   settingTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 30,
+    textAlign: 'center',
   },
   darkText: {
-    color: '#fff',
+    color: '#ffffff',
   },
   lightText: {
-    color: '#000',
+    color: '#333333',
   },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    paddingVertical: 15,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#d3d3d3',
   },
   settingText: {
     fontSize: 18,
+    fontWeight: '500',
   },
   backButton: {
     position: 'absolute',
     top: 40,
     left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   backButtonText: {
-    fontSize: 16,
+    fontSize: 18,
+    marginLeft: 8,
   },
   picker: {
     height: 50,
-    width: 150,
-    color: '#000',
+    width: 160,
+    color: '#555',
   },
   shareButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#4CAF50',
-    borderRadius: 5,
+    marginTop: 30,
+    padding: 12,
+    backgroundColor: '#007AFF',
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 2, height: 4 },
   },
   shareButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   logoutButton: {
-    marginTop: 20,
-    padding: 10,
+    marginTop: 15,
+    padding: 12,
     backgroundColor: '#FF3B30',
-    borderRadius: 5,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 2, height: 4 },
   },
   logoutButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
 });
 
