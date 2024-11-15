@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import TopBar from '../topbar/topbar'; // Ensure TopBar is imported
 import Footer from '../footer/footer'; // Ensure Footer is imported
@@ -7,44 +7,65 @@ import { useTheme } from '../../../ThemeContext'; // Ensure ThemeContext is impo
 import defaultProfileImage from '../../../assets/Profile.png';  // Adjust the path to your asset folder
 
 const LeaderboardPage = () => {
-  const { isDarkMode, fontStyle } = useTheme(); // Retrieve both isDarkMode and fontStyle from the theme context
+  const { isDarkMode, fontStyle } = useTheme();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState('yellow'); // Default to 'yellow' league
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch users data from backend
-    axios.get('http://192.168.164.70:5000/api/User/all')
-      .then(response => {
-        console.log('Users Data:', response.data);
+    axios
+      .get('http://192.168.164.70:5000/api/User/all')
+      .then((response) => {
         setUsers(response.data);
-        setFilteredUsers(response.data.filter(user => user.yellowPoints > 0)); // Filter by yellow league by default
+        setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Error fetching users:', error);
+        setLoading(false);
       });
   }, []);
+  
+  useEffect(() => {
+    // Filter by default league ('yellow') when users are updated
+    if (users.length > 0) {
+      filterByLeague('yellow');
+    }
+  }, [users]);
+  
 
   const filterByLeague = (league) => {
     setSelectedLeague(league);
+
     let filtered;
     if (league === 'yellow') {
       filtered = users.filter(user => user.yellowPoints > 0);
+      filtered.sort((a, b) => b.yellowPoints - a.yellowPoints);
     } else if (league === 'silver') {
       filtered = users.filter(user => user.silverPoints > 0);
+      filtered.sort((a, b) => b.silverPoints - a.silverPoints);
     } else if (league === 'gold') {
       filtered = users.filter(user => user.goldPoints > 0);
+      filtered.sort((a, b) => b.goldPoints - a.goldPoints);
     } else {
-      filtered = users; // Show all users if 'all' is selected
+      filtered = users;
+      filtered.sort((a, b) => {
+        const maxPointsA = Math.max(a.yellowPoints, a.silverPoints, a.goldPoints);
+        const maxPointsB = Math.max(b.yellowPoints, b.silverPoints, b.goldPoints);
+        return maxPointsB - maxPointsA;
+      });
     }
+
     setFilteredUsers(filtered);
   };
 
+  const isActiveFilter = (league) => selectedLeague === league;
+
   const renderLeaderboardItem = ({ item }) => {
-    let points = 0; // Default to 0 points
+    let points = 0;
     let leagueName = '';
 
-    // Determine which points to show based on the selected league
     if (selectedLeague === 'yellow') {
       points = item.yellowPoints;
       leagueName = 'Yellow Rank';
@@ -56,17 +77,11 @@ const LeaderboardPage = () => {
       leagueName = 'Gold Rank';
     }
 
-    // Profile image URL logic: use the image from Supabase if available
-    const profileImageUrl = item.profilePictureUrl
-      ? item.profilePictureUrl
-      : defaultProfileImage; // Default image if no URL is available
+    const profileImageUrl = item.profilePictureUrl || defaultProfileImage;
 
     return (
       <View style={[styles.leaderboardItem, isDarkMode && styles.darkLeaderboardItem]}>
-        <Image
-          source={{ uri: profileImageUrl }}  // Ensure the URL is used correctly
-          style={styles.avatar}
-        />
+        <Image source={{ uri: profileImageUrl }} style={styles.avatar} />
         <View style={styles.textContainer}>
           <Text style={[styles.username, isDarkMode && styles.darkUsername, fontStyle && { fontFamily: fontStyle }]}>
             {item.username}
@@ -80,35 +95,50 @@ const LeaderboardPage = () => {
         </Text>
       </View>
     );
-};
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, isDarkMode && styles.darkContainer, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#ffff00" />
+        <Text style={[styles.loadingText, isDarkMode && styles.darkLoadingText]}>Loading Leaderboard...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      {/* Top Bar */}
       <TopBar title="Leaderboard" />
-
-      {/* Filter Dropdowns */}
       <View style={[styles.filterContainer, isDarkMode && styles.darkFilterContainer]}>
-        <TouchableOpacity style={[styles.filterButton, isDarkMode && styles.darkFilterButton]} onPress={() => filterByLeague('yellow')}>
-          <Text style={[styles.filterText, isDarkMode && styles.darkFilterText, fontStyle && { fontFamily: fontStyle }]}>Yellow ▼</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, isDarkMode && styles.darkFilterButton]} onPress={() => filterByLeague('silver')}>
-          <Text style={[styles.filterText, isDarkMode && styles.darkFilterText, fontStyle && { fontFamily: fontStyle }]}>Silver ▼</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.filterButton, isDarkMode && styles.darkFilterButton]} onPress={() => filterByLeague('gold')}>
-          <Text style={[styles.filterText, isDarkMode && styles.darkFilterText, fontStyle && { fontFamily: fontStyle }]}>Gold ▼</Text>
-        </TouchableOpacity>
+        {['yellow', 'silver', 'gold'].map((league) => (
+          <TouchableOpacity
+            key={league}
+            style={[
+              styles.filterButton,
+              isDarkMode && styles.darkFilterButton,
+              isActiveFilter(league) && styles.activeFilterButton,
+            ]}
+            onPress={() => filterByLeague(league)}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                isDarkMode && styles.darkFilterText,
+                isActiveFilter(league) && styles.activeFilterText,
+                fontStyle && { fontFamily: fontStyle },
+              ]}
+            >
+              {league.charAt(0).toUpperCase() + league.slice(1)} ▼
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-
-      {/* Leaderboard List */}
       <FlatList
         data={filteredUsers}
         renderItem={renderLeaderboardItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
       />
-
-      {/* Footer */}
       <Footer />
     </View>
   );
@@ -123,14 +153,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#222222',
   },
   filterContainer: {
-    marginTop: 120, // Ensure it's not hidden behind the TopBar
+    marginTop: 120,
     flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: 10,
-    backgroundColor: '#f9f9f9', // Light mode background
+    backgroundColor: '#f9f9f9',
   },
   darkFilterContainer: {
-    backgroundColor: '#333333', // Dark mode background
+    backgroundColor: '#333333',
   },
   filterButton: {
     backgroundColor: '#e0e0e0',
@@ -140,14 +170,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   darkFilterButton: {
-    backgroundColor: '#555555', // Dark mode button background
+    backgroundColor: '#555555',
+  },
+  activeFilterButton: {
+    backgroundColor: '#ffff00',
   },
   filterText: {
     color: '#333',
     fontSize: 14,
   },
   darkFilterText: {
-    color: '#fff', // Text color in dark mode should be white
+    color: '#fff',
+  },
+  activeFilterText: {
+    fontWeight: 'bold',
+    color: '#333',
   },
   listContainer: {
     marginTop: 20,
@@ -195,6 +232,19 @@ const styles = StyleSheet.create({
   },
   darkScore: {
     color: '#ffff00',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  darkLoadingText: {
+    color: '#fff',
   },
 });
 
