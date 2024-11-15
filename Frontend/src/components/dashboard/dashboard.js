@@ -71,7 +71,7 @@ const DashboardPage = ({ navigation }) => {
             isDarkMode && styles.darkWelcomeText,
           ]}
         >
-          {loading ? 'Loading user data...' : `Hi ${username}, Welcome to SumDash!`}
+          {loading ? 'Loading user data...' : `Hi ${username}, Welcome Back!`}
         </Text>
 
         <LottieView

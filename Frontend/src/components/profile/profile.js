@@ -40,6 +40,30 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "No date available"; // Show a message if the date is missing or invalid
+    
+    const date = new Date(dateString);
+    if (isNaN(date)) return "Invalid date"; // Ensure the date is valid
+    
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'long' });
+    const year = date.getFullYear();
+    const suffix = (day) => {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    };
+    
+    return `${day}${suffix(day)} of ${month} ${year}`;
+  };
+  
+  
+
   const handleImageUpload = async () => {
     try {
       // Request permission to access the media library
@@ -164,8 +188,9 @@ const ProfilePage = () => {
         {userData.email}
       </Text>
       <Text style={[styles.joinedDate, isDarkMode && styles.darkJoinedDate, { fontFamily: fontStyle }]}>
-        Joined in {new Date(userData.joinDate).getFullYear()}
-      </Text>
+  Joined on {formatDate(userData.dateJoined)}
+</Text>
+
 
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>

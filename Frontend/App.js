@@ -10,7 +10,7 @@ import GamePage from './src/components/game/game';
 import DashboardPage from './src/components/dashboard/dashboard';
 import ProfilePage from './src/components/profile/profile';
 import LeaderboardPage from './src/components/leaderboard/leaderboard';
-
+import Welcome from './src/components/welcome/welcome';
 const Stack = createStackNavigator();
 
 const App = () => {
@@ -37,13 +37,21 @@ const App = () => {
 const AppNavigation = () => {
   const { fontStyle } = useTheme(); // Get the selected font style
   return (
-    <Stack.Navigator initialRouteName="login">
+    <Stack.Navigator initialRouteName="Welcome">
       <Stack.Screen
-        name="login"
-        component={LoginPage}
+        name="welcome"
+        component={Welcome}
         options={{
           headerShown: false,
           headerStyle: { fontFamily: fontStyle }, // Apply the selected font to the header
+        }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginPage}
+        options={{
+          headerShown: false,
+          headerStyle: { fontFamily: fontStyle },
         }}
       />
       <Stack.Screen

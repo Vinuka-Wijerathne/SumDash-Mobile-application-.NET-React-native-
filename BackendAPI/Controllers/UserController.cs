@@ -46,7 +46,8 @@ public class UserController : ControllerBase
             user.SilverPoints,
             user.GoldPoints,
             user.SuccessfulAttempts,
-            user.ProfilePictureUrl
+            user.ProfilePictureUrl,
+            user.DateJoined
         });
     }
 

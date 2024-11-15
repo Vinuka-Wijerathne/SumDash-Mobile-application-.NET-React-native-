@@ -12,7 +12,7 @@ const SettingsPage = ({ navigation }) => {
     try {
       await AsyncStorage.clear();
       console.log('All data cleared from AsyncStorage');
-      navigation.navigate('login');
+      navigation.navigate('Login');
     } catch (error) {
       console.error('Error clearing AsyncStorage:', error);
     }

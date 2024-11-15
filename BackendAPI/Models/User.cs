@@ -31,4 +31,7 @@ public class User
 
     // Profile picture URL, optional field
     public string? ProfilePictureUrl { get; set; }
+
+    // Date the user joined (added field)[BsonElement("DateJoined")] [BsonElement("DateJoined")][BsonElement("DateJoined")]
+    public DateTime DateJoined { get; set; } = DateTime.MinValue; // Default to avoid null issues
 }
