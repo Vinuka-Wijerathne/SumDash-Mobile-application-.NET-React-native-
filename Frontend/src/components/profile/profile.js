@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { createClient } from '@supabase/supabase-js';
 import { useTheme } from '../../../ThemeContext';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from '../footer/footer';
 import { AntDesign } from '@expo/vector-icons';
 
-import { storage } from '../../../firebaseConfig';
+// Initialize Supabase client
+const supabaseUrl = 'https://vjkxqqdssbjbugxjxnvk.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqa3hxcWRzc2JqYnVneGp4bnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2NTM5MjAsImV4cCI6MjA0NzIyOTkyMH0.VE_G_HXzvaZJsZ4CE-9sDQx-pDqi_PjEWLNjtBYVDz4';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const ProfilePage = () => {
   const { isDarkMode, fontStyle } = useTheme();
@@ -41,10 +44,9 @@ const ProfilePage = () => {
   }, []);
 
   const formatDate = (dateString) => {
-    if (!dateString) return "No date available"; // Show a message if the date is missing or invalid
-    
+    if (!dateString) return "No date available"; 
     const date = new Date(dateString);
-    if (isNaN(date)) return "Invalid date"; // Ensure the date is valid
+    if (isNaN(date)) return "Invalid date";
     
     const day = date.getDate();
     const month = date.toLocaleString('default', { month: 'long' });
@@ -62,11 +64,8 @@ const ProfilePage = () => {
     return `${day}${suffix(day)} of ${month} ${year}`;
   };
   
-  
-
   const handleImageUpload = async () => {
     try {
-      // Request permission to access the media library
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!granted) {
         setError("Permission to access gallery is required!");
@@ -79,36 +78,49 @@ const ProfilePage = () => {
         aspect: [4, 3],
         quality: 1,
       });
-      
+  
       const uri = pickerResult.assets ? pickerResult.assets[0].uri : undefined;
       console.log("Image URI:", uri);
-      
   
-      // Exit if no image is selected
-      if (pickerResult.cancelled) return;
+      if (!uri) return;
   
+      const userId2 = await AsyncStorage.getItem('userId');
+      console.log(userId2);
   
-      // Fetch the image as a blob
-      const response = await fetch(uri);
-      if (!response.ok) throw new Error("Failed to fetch image.");
+      // Upload to Supabase storage with the bucket 'SumDash'
+      const fileName = `${userId2}-${Date.now()}.jpg`;
+      const filePath = `profile_pictures/${fileName}`;
+      const { data, error } = await supabase.storage.from('SumDash').upload(filePath, {
+        uri,
+        type: 'image/jpeg',
+        name: fileName,
+      });
   
-      const blob = await response.blob();
+      if (error) {
+        console.error("Supabase upload error:", error);
+        setError("Image upload failed. Please try again.");
+        return;
+      }
   
-      // Reference to Firebase Storage
-      const storageRef = ref(storage, `profile_pictures/${userData.userId}`);
-      console.log("Uploading image to Firebase...");
+      console.log("Image uploaded to Supabase. Path:", filePath);
   
-      // Upload the image to Firebase Storage
-      await uploadBytes(storageRef, blob);
+      // Generate a signed URL for the uploaded image (private URL)
+      const { data: signedData, error: signedUrlError } = await supabase.storage
+        .from('SumDash')
+        .createSignedUrl(filePath, 60); // The 60 here is the expiration time for the URL in seconds
   
-      // Retrieve the download URL
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log("Image uploaded to Firebase. Download URL:", downloadURL);
+      if (signedUrlError) {
+        console.error("Error generating signed URL:", signedUrlError);
+        setError("Failed to retrieve signed image URL.");
+        return;
+      }
+  
+      const signedURL = signedData.signedUrl;
+      console.log("Signed URL of image:", signedURL);
   
       // Update the user's profile picture URL in the backend
       const token = await AsyncStorage.getItem("token");
-      const userId = userData.userId;
-  
+      const userId = await AsyncStorage.getItem('userId');
       if (!token || !userId) {
         setError("No authentication token or user ID found");
         return;
@@ -116,12 +128,12 @@ const ProfilePage = () => {
   
       await axios.put(
         `http://192.168.164.70:5000/api/user/${userId}/updateProfile`,
-        { profilePictureUrl: downloadURL },
+        { profilePictureUrl: signedURL },
         { headers: { Authorization: `Bearer ${token}` } }
       );
   
-      // Update the profile picture URL in the UI
-      setUserData((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
+      setUserData((prev) => ({ ...prev, profilePictureUrl: signedURL }));
+      console.log("Profile picture URL updated in backend:", signedURL);
   
     } catch (error) {
       setError("Image upload failed. Please try again.");
@@ -129,8 +141,8 @@ const ProfilePage = () => {
     }
   };
   
-  
-  
+
+
   const handleDeleteAccount = async () => {
     Alert.alert(
       "Are you sure?",
@@ -170,12 +182,15 @@ const ProfilePage = () => {
     );
   }
 
-  const profileImageUrl = userData.profilePictureUrl || require('../../../assets/Profile.png');
+  const profileImageUrl = userData?.profilePictureUrl ? { uri: userData.profilePictureUrl } : require('../../../assets/Profile.png');
+
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>
       {error && <Text style={[styles.errorText, { fontFamily: fontStyle }]}>{error}</Text>}
       <Image source={profileImageUrl} style={styles.profileImage} />
+
+
       <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
         <Text style={styles.uploadButtonText}>Upload Profile Picture</Text>
       </TouchableOpacity>

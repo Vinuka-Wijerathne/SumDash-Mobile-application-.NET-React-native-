@@ -20,7 +20,7 @@ const SignUpPage = ({ navigation }) => { // Receive navigation prop
         Alert.alert('Sign Up Successful', response.data, [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('login'), 
+            onPress: () => navigation.navigate('Login'), 
           },
         ]);
       } catch (error) {
@@ -95,7 +95,7 @@ const SignUpPage = ({ navigation }) => { // Receive navigation prop
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('login')}> 
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}> 
           <Text style={styles.linkText}> Login</Text>
         </TouchableOpacity>
       </View>

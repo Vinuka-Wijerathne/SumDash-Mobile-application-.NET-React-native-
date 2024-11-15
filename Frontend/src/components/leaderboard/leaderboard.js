@@ -56,10 +56,15 @@ const LeaderboardPage = () => {
       leagueName = 'Gold Rank';
     }
 
+    // Profile image URL logic: use the image from Supabase if available
+    const profileImageUrl = item.profilePictureUrl
+      ? item.profilePictureUrl
+      : defaultProfileImage; // Default image if no URL is available
+
     return (
       <View style={[styles.leaderboardItem, isDarkMode && styles.darkLeaderboardItem]}>
         <Image
-          source={item.profilePictureUrl ? { uri: item.profilePictureUrl } : defaultProfileImage}
+          source={{ uri: profileImageUrl }}  // Ensure the URL is used correctly
           style={styles.avatar}
         />
         <View style={styles.textContainer}>
@@ -75,7 +80,7 @@ const LeaderboardPage = () => {
         </Text>
       </View>
     );
-  };
+};
 
   return (
     <View style={[styles.container, isDarkMode && styles.darkContainer]}>

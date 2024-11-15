@@ -51,25 +51,46 @@ public class UserController : ControllerBase
         });
     }
 
-   [Authorize]
+[Authorize]
 [HttpPut("{userId:length(24)}/updateProfile")]
-public async Task<IActionResult> UpdateProfile(string userId, [FromBody] User userProfileUpdate)
+public async Task<IActionResult> UpdateProfile(string userId, [FromBody] UserProfileUpdate userProfileUpdate)
 {
+    // Validate the userId format
     if (!ObjectId.TryParse(userId, out var objectId))
         return BadRequest("Invalid user ID format.");
 
-    var update = Builders<User>.Update
-        .Set(u => u.Username, userProfileUpdate.Username)
-        .Set(u => u.PasswordHash, userProfileUpdate.PasswordHash)
-        .Set(u => u.ProfilePictureUrl, userProfileUpdate.ProfilePictureUrl);
+    // Initialize the update definition builder
+    var updateDefinition = Builders<User>.Update;
 
-    var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), update);
+    // Start with an empty update definition
+    var update = new List<UpdateDefinition<User>>();
 
+    // Conditionally add the fields to the update list
+    if (!string.IsNullOrEmpty(userProfileUpdate.Username))
+    {
+        update.Add(updateDefinition.Set(u => u.Username, userProfileUpdate.Username));
+    }
+
+    if (!string.IsNullOrEmpty(userProfileUpdate.ProfilePictureUrl))
+    {
+        update.Add(updateDefinition.Set(u => u.ProfilePictureUrl, userProfileUpdate.ProfilePictureUrl));
+    }
+
+    // Combine the update definitions (if any were added)
+    var combinedUpdate = Builders<User>.Update.Combine(update);
+
+    // Perform the update in MongoDB
+    var result = await _users.UpdateOneAsync(u => u.Id == objectId.ToString(), combinedUpdate);
+
+    // Handle the case where no matching user is found
     if (result.MatchedCount == 0)
         return NotFound("User not found.");
 
+    // Return success message
     return Ok("Profile updated successfully.");
 }
+
+
 
 
     // PUT: Update points by user ID

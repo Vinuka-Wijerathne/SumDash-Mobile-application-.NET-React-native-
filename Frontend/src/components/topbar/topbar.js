@@ -1,14 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../../ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
-const TopBar = ({ profileImage, logo }) => {
+const TopBar = ({ logo }) => {
   const navigation = useNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isDarkMode, toggleTheme, fontStyle } = useTheme(); // Retrieve fontStyle from ThemeContext
+  const [profileImage, setProfileImage] = useState(null);
+  const { isDarkMode, toggleTheme, fontStyle } = useTheme();
   const slideAnim = new Animated.Value(-250);
+
+  // Fetch user data and profile image
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          console.log('Token not found');
+          return;
+        }
+
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          console.log('User ID not found');
+          return;
+        }
+
+        // Fetch user data with token and userId
+        const response = await axios.get(`http://192.168.164.70:5000/api/User/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Set profile image URL if available in the response
+        setProfileImage(response.data.profilePictureUrl || ''); // Fallback to empty string if no image URL
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -24,7 +58,7 @@ const TopBar = ({ profileImage, logo }) => {
       <Text style={[styles.title, { fontFamily: fontStyle }, isDarkMode ? styles.darkTitle : styles.lightTitle]}>
         SumDash
       </Text>
-      
+
       <View style={styles.themeToggleContainer}>
         <Text style={[styles.themeToggleLabel, { fontFamily: fontStyle }, isDarkMode ? styles.darkThemeLabel : styles.lightThemeLabel]}>
           {isDarkMode ? 'Dark Mode' : 'Light Mode'}
@@ -39,7 +73,10 @@ const TopBar = ({ profileImage, logo }) => {
       </View>
 
       <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
-        <Image source={profileImage || require('../../../assets/Profile.png')} style={styles.profileImage} />
+        <Image
+          source={profileImage ? { uri: profileImage } : require('../../../assets/Profile.png')}
+          style={styles.profileImage}
+        />
       </TouchableOpacity>
 
       <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
